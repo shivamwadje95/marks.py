@@ -12,7 +12,7 @@
     <!-- Custom brand color -->
     <style>
         :root {
-            --brand: #1e3a5f;
+            --brand: #000000da;
         }
         body { 
             background-color: #f8f9fa; 
@@ -34,7 +34,7 @@
             color: white; 
         }
         .hero-section {
-            background: linear-gradient(135deg, #1e3a5f 0%, #2d6a9f 100%);
+            background: linear-gradient(135deg, #1B4332 0%, #000000da 100%);
             color: white;
             border-radius: 12px;
         }
@@ -60,36 +60,55 @@
 <body class="bg-light">
 
     <!-- Professional Navbar -->
-    <nav class="navbar navbar-expand navbar-dark shadow-sm">
-        <div class="container justify-content-center">
+    <nav class="navbar navbar-expand-lg navbar-dark shadow-sm">
+        <div class="container">
 
             <!-- Brand / Logo -->
             <a class="navbar-brand fw-bold fs-5 me-3" href="{{ url_for('home') }}">
                 🏨 Hostel Visitor Log
             </a>
+            <button class="navbar-toggler"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#mainNavbar"
+            aria-controls="mainNavbar"
+            aria-expanded="false"
+            aria-label="toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
 
             <!-- Nav links -->
-            <div class="navbar-nav">
-                <a class="nav-link px-2 py-1" href="{{ url_for('home') }}">
-                    <i class="bi bi-house"></i> Home
-                </a>
-                <a class="nav-link px-2 py-1" href="{{ url_for('records') }}">
-                    <i class="bi bi-table"></i> Records
-                </a>
-                <a class="nav-link px-2 py-1" href="{{ url_for('add_visitor') }}">
-                    <i class="bi bi-person-plus"></i> Add Visitor
-                </a>
-                <a class="nav-link px-2 py-1" href="{{ url_for('about') }}">
-                    <i class="bi bi-info-circle"></i> About
-                </a>
-                {% if session.role == 'admin' %}
-
-                    <!-- Filter Button - Now goes to separate page -->
-                    <a class="nav-link px-2 py-1 btn btn-outline-warning btn-sm ms-2 text-warning" href="{{ url_for('filter_page') }}">
-                        <i class="bi bi-funnel"></i> Filter
-                    </a>
-                {% endif %}
-                
+            <div class="collapse navbar-collapse" id="mainNavbar">
+                <ul class="navbar-nav me-auto align-items-lg-center">
+                    <li class="nav-item">
+                        <a class="nav-link px-2 py-1" href="{{ url_for('home') }}">
+                            <i class="bi bi-house"></i> Home
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link px-2 py-1" href="{{ url_for('records') }}">
+                            <i class="bi bi-table"></i> Records
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link px-2 py-1" href="{{ url_for('add_visitor') }}">
+                            <i class="bi bi-person-plus"></i> Add Visitor
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link px-2 py-1" href="{{ url_for('about') }}">
+                            <i class="bi bi-info-circle"></i> About
+                        </a>
+                    </li>
+                    {% if session.get('role') == 'admin' %}
+                    <!-- Filter Button -->
+                    <li class="nav-item">
+                        <a class="nav-link px-2 py-1 btn btn-outline-warning btn-sm ms-2 text-warning" href="{{ url_for('filter_page') }}">
+                            <i class="bi bi-funnel"></i> Filter
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
 
                 <!-- Search form -->
                 <form class="d-flex ms-3" action="{{ url_for('search') }}" method="GET">
@@ -101,40 +120,46 @@
                            value="{{ request.args.get('q', '') }}">
                     <button class="btn btn-outline-light btn-sm" type="submit">Search</button>
                 </form>
-                {% if session.username %}
-                    <span class="nav-link px-2 py-1 text-white">👤 {{ session.username }}</span>
-                    <a class="nav-link px-2 py-1" href="{{ url_for('logout') }}">
-                        🔓 Logout
-                    </a>
+
+                <!-- User section -->
+                <ul class="navbar-nav ms-2 align-items-lg-center">
+                {% if session.get('username') %}
+                    <li class="nav-item">
+                        <span class="nav-link text-white">👤 {{ session.username }}</span>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link px-2 py-1" href="{{ url_for('logout') }}">
+                            🔓 Logout
+                        </a>
+                    </li>
                 {% else %}
-                    <a class="nav-link px-2 py-1" href="{{ url_for('login') }}">
-                        🔒 Login
-                    </a>
+                    <li class="nav-item">
+                        <a class="nav-link px-2 py-1" href="{{ url_for('login') }}">
+                            🔒 Login
+                        </a>
+                    </li>
                 {% endif %}
+                </ul>
             </div>
         </div>
     </nav>
-            </div>
 
-        </div>
-    </nav>
-
-<div class="container mt-4 mb-5">
-    {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-        {% for category, message in messages %}
-            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                <i class="bi bi-check-circle-fill"></i> {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        {% endfor %}
-    {% endif %}
-    {% endwith %}
-    
-    <!-- Page content -->
-    {% block content %}
-    {% endblock %}
-</div>
+    <div class="container mt-4 mb-5">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    <i class="bi bi-check-circle-fill"></i> {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+        {% endwith %}
+        
+        <!-- Page content -->
+        {% block content %}
+        {% endblock %}
+    </div>
 
     <!-- Professional Footer -->
     <footer style="background-color: var(--brand);" class="text-white text-center py-3 mt-5">
