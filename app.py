@@ -5,11 +5,8 @@ from functools import wraps
 import sqlite3
 from datetime import datetime
 from init_db import init_db
-from dotenv import load_dotenv
 from groq import Groq
 
-# Load.env file for API key
-load_dotenv() 
 
 # Database path fix
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
