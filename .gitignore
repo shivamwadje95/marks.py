@@ -1,0 +1,6 @@
+.env
+database.db
+*.db
+__pycache__/
+myenv/
+venv/

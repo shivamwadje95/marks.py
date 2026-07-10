@@ -36,7 +36,7 @@
                 </tr>
                 <tr>
                     <th>Out Time:</th>
-                    <td>{{ visitor['out_time'] }}</td>
+                    <td>{{ visitor['out_time'] if visitor['out_time'] else 'Not checked out yet' }}</td>
                 </tr>
                 <tr>
                     <th>Status:</th>
@@ -47,12 +47,29 @@
                     </td>
                 </tr>
             </table>
+
+            <!-- ===== AI TIP SECTION ===== -->
+            <div class="mt-3">
+                <a href="{{ url_for('get_visitor_tip', id=visitor['id']) }}" class="btn btn-warning">
+                    <i class="bi bi-robot"></i> Get AI Security Tip
+                </a>
+            </div>
+
+            {% if tip %}
+            <div class="alert alert-info mt-3" role="alert">
+                <strong><i class="bi bi-lightbulb"></i> AI Tip:</strong> {{ tip }}
+            </div>
+            {% endif %}
+            
+
         </div>
         <div class="card-footer">
             {% if visitor['status'] == 'Inside' %}
-            <a href="{{ url_for('checkout_visitor', id=visitor['id']) }}" class="btn btn-warning">
-                <i class="bi bi-box-arrow-right"></i> Checkout
-            </a>
+            <form action="{{ url_for('checkout_visitor', id=visitor['id']) }}" method="POST" style="display:inline;">
+                <button type="submit" class="btn btn-warning">
+                    <i class="bi bi-box-arrow-right"></i> Checkout
+                </button>
+            </form>
             {% endif %}
             
             <form action="{{ url_for('delete_visitor', id=visitor['id']) }}" method="POST" style="display:inline;">
