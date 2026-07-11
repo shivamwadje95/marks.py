@@ -6,7 +6,9 @@ import sqlite3
 from datetime import datetime
 from init_db import init_db
 from groq import Groq
+from dotenv import load_dotenv
 
+load_dotenv()
 
 # Database path fix
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
