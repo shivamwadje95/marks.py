@@ -1,26 +1,94 @@
 {% extends 'base.html' %}
 
+{% block title %}About{% endblock %}
+
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-md-8">
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <h2><i class="bi bi-info-circle"></i> About Project</h2>
-                <h5 class="text-muted">Hostel Visitor Log System</h5>
-                <p>This is a Flask-based web application to manage and track visitors in a hostel.</p>
+    <div class="col-lg-10">
+        <div class="card shadow-lg border-0" style="border-radius: 15px;">
+            <div class="card-header text-white text-center py-4" style="background: linear-gradient(90deg, #1b4332, #2d6a4f); border-radius: 15px 15px 0 0;">
+                <h3 class="mb-1 fw-bold"><i class="bi bi-shield-lock-fill"></i> Hostel Visitor Log System</h3>
+                <p class="mb-0">Secure. Smart. Simple.</p>
+            </div>
+            <div class="card-body p-4 p-md-5">
                 
-                <h5 class="mt-4">Features:</h5>
-                <ul>
-                    <li>Dashboard with visitor statistics</li>
-                    <li>Add new visitor entries with validation</li>
-                    <li>View all records in Bootstrap table</li>
-                    <li>Flash messages for success/error alerts</li>
-                </ul>
+                <p class="lead text-center mb-4">
+                    A Flask-based web application to digitize and secure the visitor management process in hostels.
+                </p>
 
-                <h5 class="mt-4">Tech Stack:</h5>
-                <p><strong>Flask, Python, Bootstrap 5, HTML5</strong></p>
+                <div class="row g-4 mb-4">
+                    <div class="col-md-6">
+                        <div class="d-flex">
+                            <i class="bi bi-graph-up-arrow fs-2 text-primary me-3"></i>
+                            <div>
+                                <h6 class="fw-bold">Dashboard with Statistics</h6>
+                                <p class="text-muted mb-0">Live count of Total, Inside, and Checked-Out visitors</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex">
+                            <i class="bi bi-person-plus fs-2 text-success me-3"></i>
+                            <div>
+                                <h6 class="fw-bold">Add Visitor with Validation</h6>
+                                <p class="text-muted mb-0">Secure form to add new entries with all details</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex">
+                            <i class="bi bi-table fs-2 text-info me-3"></i>
+                            <div>
+                                <h6 class="fw-bold">View All Records</h6>
+                                <p class="text-muted mb-0">Bootstrap table with Search, Filter and Status badges</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex">
+                            <i class="bi bi-bell fs-2 text-warning me-3"></i>
+                            <div>
+                                <h6 class="fw-bold">Flash Alerts</h6>
+                                <p class="text-muted mb-0">Success and Error messages for better UX</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex">
+                            <i class="bi bi-download fs-2 text-dark me-3"></i>
+                            <div>
+                                <h6 class="fw-bold">Export to CSV</h6>
+                                <p class="text-muted mb-0">Admin can download all records in 1 click</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex">
+                            <i class="bi bi-robot fs-2 text-danger me-3"></i>
+                            <div>
+                                <h6 class="fw-bold">AI Security Tip</h6>
+                                <p class="text-muted mb-0">Groq AI gives 1-line security suggestion per visitor</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-                <a href="/" class="btn btn-dark mt-3"><i class="bi bi-house"></i> Back to Dashboard</a>
+                <hr>
+
+                <h5 class="fw-bold mb-3"><i class="bi bi-code-slash"></i> Tech Stack</h5>
+                <div class="d-flex flex-wrap gap-2 mb-4">
+                    <span class="badge bg-primary p-2"><i class="bi bi-lightning"></i> Flask</span>
+                    <span class="badge bg-warning text-dark p-2"><i class="bi bi-filetype-py"></i> Python</span>
+                    <span class="badge bg-info p-2"><i class="bi bi-bootstrap"></i> Bootstrap 5</span>
+                    <span class="badge bg-secondary p-2"><i class="bi bi-filetype-html"></i> HTML5</span>
+                    <span class="badge bg-success p-2"><i class="bi bi-database"></i> SQLite</span>
+                </div>
+
+                <div class="text-center mt-4">
+                    <a href="{{ url_for('home') }}" class="btn btn-brand btn-lg">
+                        <i class="bi bi-house"></i> Back to Dashboard
+                    </a>
+                </div>
             </div>
         </div>
     </div>

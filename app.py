@@ -1,5 +1,7 @@
 import os
-from flask import Flask, redirect, render_template, request, url_for, flash, session
+import csv
+from io import StringIO
+from flask import Flask, redirect, render_template, request, url_for, flash, session, make_response
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 import sqlite3
@@ -66,6 +68,34 @@ def records():
     visitors = conn.execute(query, params).fetchall()
     conn.close()
     return render_template('records.html', visitors=visitors)
+
+
+@app.route('/export_csv')
+def export_csv():
+    if session.get('role')!= 'admin':
+        flash('Only admin can export data', 'danger')
+        return redirect(url_for('home'))
+
+    conn = get_db()
+    visitors = conn.execute("SELECT * FROM visitors ORDER BY id DESC").fetchall()
+    conn.close()
+
+    
+    si = StringIO()
+    cw = csv.writer(si)
+
+
+    cw.writerow(['ID', 'Visitor Name', 'Student Name', 'Room No', 'Purpose', 'In Time', 'Out Time', 'Status'])
+
+    
+    for v in visitors:
+        cw.writerow([v['id'], v['visitor_name'], v['student_name'], v['room_number'],
+                     v['purpose'], v['in_time'], v['out_time'], v['status']])
+
+    output = make_response(si.getvalue())
+    output.headers["Content-Disposition"] = "attachment; filename=visitor_report.csv"
+    output.headers["Content-type"] = "text/csv"
+    return output
 
 @app.route('/details/<int:id>')
 def details(id):
