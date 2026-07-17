@@ -100,10 +100,12 @@
                         </td>
                         <td>
                             <div class="d-flex align-items-center">
-                                <div class="rounded-circle d-flex justify-content-center align-items-center me-2"
-                                     style="width:30px; height:30px; background-color:#1e3a5f; color:white;">
-                                    {{ visitor['visitor_name'][0] }}
-                                </div>
+                                <a href="{{ url_for('details', id=visitor['id']) }}">
+                                    <img src="{{ url_for('static', filename='uploads/' + visitor['photo']) }}"
+                                         class="rounded-circle me-2 shadow-sm"
+                                         width="35" height="35"
+                                         style="object-fit:cover; cursor:pointer; border:2px solid #1e3a5f;">
+                                </a>
                                 <span class="fw-bold">{{ visitor['visitor_name'] }}</span>
                             </div>
                         </td>

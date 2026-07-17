@@ -6,7 +6,7 @@
     <div class="col-md-6">
         <div class="card shadow-sm">
             <div class="card-body">
-                <form method="POST">
+                <form method="POST" enctype="multipart/form-data"> <!-- CHANGE 1 -->
                     <div class="mb-3">
                         <label class="form-label">Visitor Name</label>
                         <input type="text" class="form-control" name="visitor_name" required>
@@ -23,6 +23,13 @@
                         <label class="form-label">Purpose</label>
                         <input type="text" class="form-control" name="purpose" required>
                     </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Visitor Photo</label>
+                        <input type="file" name="photo" class="form-control" accept="image/*">
+                        <div class="form-text">JPG, PNG file. Khali chhodoge to default photo lagegi</div>
+                    </div>
+
                     <button type="submit" class="btn btn-dark w-100"><i class="bi bi-check-square"></i> Submit Entry</button>
                 </form>
             </div>

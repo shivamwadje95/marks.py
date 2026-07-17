@@ -3,6 +3,7 @@ import csv
 from io import StringIO
 from flask import Flask, redirect, render_template, request, url_for, flash, session, make_response
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename # NEW
 from functools import wraps
 import sqlite3
 from datetime import datetime
@@ -16,10 +17,19 @@ load_dotenv()
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, 'database.db')
 
+# NEW: Upload folder setup
+UPLOAD_FOLDER = os.path.join(BASE_DIR, 'static', 'uploads')
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
 init_db()
 
 app = Flask(__name__)
 app.secret_key = "hostel-visitor-2026"
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER # NEW
+
+def allowed_file(filename): # NEW
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def get_db():
     conn = sqlite3.connect(DB_PATH)
@@ -69,7 +79,6 @@ def records():
     conn.close()
     return render_template('records.html', visitors=visitors)
 
-
 @app.route('/export_csv')
 def export_csv():
     if session.get('role')!= 'admin':
@@ -80,17 +89,13 @@ def export_csv():
     visitors = conn.execute("SELECT * FROM visitors ORDER BY id DESC").fetchall()
     conn.close()
 
-    
     si = StringIO()
     cw = csv.writer(si)
+    cw.writerow(['ID', 'Visitor Name', 'Student Name', 'Room No', 'Purpose', 'In Time', 'Out Time', 'Status', 'Photo']) # NEW: Photo added
 
-
-    cw.writerow(['ID', 'Visitor Name', 'Student Name', 'Room No', 'Purpose', 'In Time', 'Out Time', 'Status'])
-
-    
     for v in visitors:
         cw.writerow([v['id'], v['visitor_name'], v['student_name'], v['room_number'],
-                     v['purpose'], v['in_time'], v['out_time'], v['status']])
+                     v['purpose'], v['in_time'], v['out_time'], v['status'], v['photo']]) # NEW
 
     output = make_response(si.getvalue())
     output.headers["Content-Disposition"] = "attachment; filename=visitor_report.csv"
@@ -158,6 +163,13 @@ def add_visitor():
         room_number = request.form['room_number']
         purpose = request.form['purpose']
 
+        # NEW: Photo upload logic
+        file = request.files.get('photo')
+        photo_filename = 'default.png'
+        if file and file.filename and allowed_file(file.filename):
+            photo_filename = secure_filename(file.filename)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], photo_filename))
+
         if not visitor_name or not student_name or not room_number or not purpose:
             flash('Please complete all fields', 'danger')
             return render_template('add_visitor.html')
@@ -166,9 +178,9 @@ def add_visitor():
 
         conn = get_db()
         conn.execute("""
-            INSERT INTO visitors (visitor_name, student_name, room_number, purpose, in_time, status)
-            VALUES (?,?,?,?,?,?)
-        """, (visitor_name, student_name, room_number, purpose, in_time, 'Inside'))
+            INSERT INTO visitors (visitor_name, student_name, room_number, purpose, in_time, status, photo)
+            VALUES (?,?,?,?,?,?,?)
+        """, (visitor_name, student_name, room_number, purpose, in_time, 'Inside', photo_filename)) # NEW: photo added
         conn.commit()
         conn.close()
 

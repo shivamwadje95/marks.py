@@ -17,7 +17,8 @@ def init_db():
     purpose TEXT NOT NULL,
     in_time TEXT NOT NULL,
     out_time TEXT,
-    status TEXT DEFAULT "Inside"
+    status TEXT DEFAULT "Inside",
+    photo TEXT DEFAULT "default.png"
     )""")
 
     cursor.execute("""CREATE TABLE IF NOT EXISTS users (

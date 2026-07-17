@@ -75,9 +75,12 @@
                 <td>{{ loop.index }}</td>
                 <td class="visitor-name">
                     <div class="d-flex align-items-center">
-                        <span class="badge rounded-circle bg-primary me-2" style="width:32px;height:32px;line-height:24px;">
-                            {{ visitor.visitor_name[0] }}
-                        </span>
+                        <a href="{{ url_for('details', id=visitor.id) }}">
+                            <img src="{{ url_for('static', filename='uploads/' + visitor.photo) }}" 
+                                 class="rounded-circle me-2" 
+                                 width="40" height="40" 
+                                 style="object-fit:cover; cursor:pointer;">
+                        </a>
                         {{ visitor.visitor_name }}
                     </div>
                 </td>
