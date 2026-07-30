@@ -35,7 +35,7 @@
             <div class="d-flex align-items-center">
                 <span style="font-size:40px;">👥</span>
                 <div class="ms-3">
-                    <h2 class="fw-bold text-primary mb-0">{{ visitors|length }}</h2>
+                    <h2 class="fw-bold text-primary mb-0">{{ total_count }}</h2>
                     <p class="text-muted mb-0">Total Visitors</p>
                 </div>
             </div>
@@ -47,8 +47,7 @@
             <div class="d-flex align-items-center">
                 <span style="font-size:40px;">✅</span>
                 <div class="ms-3">
-                    {% set inside = visitors|selectattr('status','equalto','Inside')|list %}
-                    <h2 class="fw-bold text-success mb-0">{{ inside|length }}</h2>
+                    <h2 class="fw-bold text-success mb-0">{{ inside_count }}</h2>
                     <p class="text-muted mb-0">Currently Inside</p>
                 </div>
             </div>
@@ -60,8 +59,7 @@
             <div class="d-flex align-items-center">
                 <span style="font-size:40px;">🚪</span>
                 <div class="ms-3">
-                    {% set checked_out = visitors|selectattr('status','equalto','Checked Out')|list %}
-                    <h2 class="fw-bold text-secondary mb-0">{{ checked_out|length }}</h2>
+                    <h2 class="fw-bold text-secondary mb-0">{{ checkout_count }}</h2>
                     <p class="text-muted mb-0">Checked Out</p>
                 </div>
             </div>
@@ -69,9 +67,9 @@
     </div>
 </div>
 
-<!-- Section heading -->
+<!-- Section heading - CHANGED -->
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <h4 class="fw-bold mb-0">Recent Visitors</h4>
+    <h4 class="fw-bold mb-0">Recent 5 Visitors</h4> <!-- Page wala hata diya -->
     <a href="{{ url_for('records') }}"
        class="btn btn-sm btn-outline-primary">
         View All →
@@ -80,7 +78,7 @@
 
 <!-- Visitor Cards -->
 <div class="row">
-    {% for visitor in visitors[:8] %}
+    {% for visitor in visitors %}
     <div class="col-12 col-md-6 col-lg-3 mb-3">
         <div class="card student-card h-100">
             <div class="card-header py-2"
@@ -115,8 +113,9 @@
 
 {% if not visitors %}
 <div class="alert alert-info mt-4" role="alert">
-    No visitors logged yet. <a href="{{ url_for('add_visitor') }}">Add the first visitor</a>
+    No visitors found.
 </div>
 {% endif %}
+
 
 {% endblock %}

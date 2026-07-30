@@ -1,10 +1,10 @@
 import os
 import csv
+import math
 from io import StringIO
 from flask import Flask, redirect, render_template, request, url_for, flash, session, make_response
 from werkzeug.security import generate_password_hash, check_password_hash
-from werkzeug.utils import secure_filename # NEW
-from functools import wraps
+from werkzeug.utils import secure_filename
 import sqlite3
 from datetime import datetime
 from init_db import init_db
@@ -13,11 +13,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Database path fix
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, 'database.db')
-
-# NEW: Upload folder setup
 UPLOAD_FOLDER = os.path.join(BASE_DIR, 'static', 'uploads')
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -26,9 +23,9 @@ init_db()
 
 app = Flask(__name__)
 app.secret_key = "hostel-visitor-2026"
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER # NEW
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-def allowed_file(filename): # NEW
+def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def get_db():
@@ -39,13 +36,15 @@ def get_db():
 @app.route('/')
 def home():
     conn = get_db()
-    visitors = conn.execute("SELECT * FROM visitors ORDER BY id DESC").fetchall()
+    # SIRF 5 RECENT VISITORS
+    visitors = conn.execute("SELECT * FROM visitors ORDER BY id DESC LIMIT 5").fetchall()
+
+    # Counts for dashboard cards - full count
+    total_count = conn.execute("SELECT COUNT(*) FROM visitors").fetchone()[0]
+    inside_count = conn.execute("SELECT COUNT(*) FROM visitors WHERE status = 'Inside'").fetchone()[0]
+    checkout_count = total_count - inside_count
     rooms = conn.execute("SELECT DISTINCT room_number FROM visitors ORDER BY room_number").fetchall()
     conn.close()
-
-    total_count = len(visitors)
-    inside_count = sum(1 for v in visitors if v['status'] == 'Inside')
-    checkout_count = total_count - inside_count
 
     return render_template('home.html',
                          visitors=visitors,
@@ -56,28 +55,51 @@ def home():
 
 @app.route('/records')
 def records():
+    page = request.args.get('page', 1, type=int)
+    per_page = 10 # 10 records per page
+    offset = (page - 1) * per_page
+
     room = request.args.get('room')
     status = request.args.get('status')
     q = request.args.get('q')
 
     conn = get_db()
     query = "SELECT * FROM visitors WHERE 1=1"
+    count_query = "SELECT COUNT(*) FROM visitors WHERE 1=1"
     params = []
+    count_params = []
 
     if room:
         query += " AND room_number =?"
+        count_query += " AND room_number =?"
         params.append(room)
+        count_params.append(room)
     if status:
         query += " AND status =?"
+        count_query += " AND status =?"
         params.append(status)
+        count_params.append(status)
     if q:
         query += " AND visitor_name LIKE?"
+        count_query += " AND visitor_name LIKE?"
         params.append(f"%{q}%")
+        count_params.append(f"%{q}%")
 
-    query += " ORDER BY id DESC"
+    query += " ORDER BY id DESC LIMIT? OFFSET?"
+    params.extend([per_page, offset])
+
     visitors = conn.execute(query, params).fetchall()
+    total = conn.execute(count_query, count_params).fetchone()[0]
+
+    inside_count = conn.execute("SELECT COUNT(*) FROM visitors WHERE status = 'Inside'").fetchone()[0]
+    checkout_count = total - inside_count
+    rooms = conn.execute("SELECT DISTINCT room_number FROM visitors ORDER BY room_number").fetchall()
     conn.close()
-    return render_template('records.html', visitors=visitors)
+
+    total_pages = math.ceil(total / per_page) if total > 0 else 1
+
+    return render_template('records.html', visitors=visitors, page=page, total_pages=total_pages,
+                           room=room, status=status, q=q, total_count=total, inside_count=inside_count, checkout_count=checkout_count, rooms=rooms)
 
 @app.route('/export_csv')
 def export_csv():
@@ -91,11 +113,11 @@ def export_csv():
 
     si = StringIO()
     cw = csv.writer(si)
-    cw.writerow(['ID', 'Visitor Name', 'Student Name', 'Room No', 'Purpose', 'In Time', 'Out Time', 'Status', 'Photo']) # NEW: Photo added
+    cw.writerow(['ID', 'Visitor Name', 'Student Name', 'Room No', 'Purpose', 'In Time', 'Out Time', 'Status', 'Photo'])
 
     for v in visitors:
         cw.writerow([v['id'], v['visitor_name'], v['student_name'], v['room_number'],
-                     v['purpose'], v['in_time'], v['out_time'], v['status'], v['photo']]) # NEW
+                     v['purpose'], v['in_time'], v['out_time'], v['status'], v['photo']])
 
     output = make_response(si.getvalue())
     output.headers["Content-Disposition"] = "attachment; filename=visitor_report.csv"
@@ -163,7 +185,6 @@ def add_visitor():
         room_number = request.form['room_number']
         purpose = request.form['purpose']
 
-        # NEW: Photo upload logic
         file = request.files.get('photo')
         photo_filename = 'default.png'
         if file and file.filename and allowed_file(file.filename):
@@ -180,7 +201,7 @@ def add_visitor():
         conn.execute("""
             INSERT INTO visitors (visitor_name, student_name, room_number, purpose, in_time, status, photo)
             VALUES (?,?,?,?,?,?,?)
-        """, (visitor_name, student_name, room_number, purpose, in_time, 'Inside', photo_filename)) # NEW: photo added
+        """, (visitor_name, student_name, room_number, purpose, in_time, 'Inside', photo_filename))
         conn.commit()
         conn.close()
 
@@ -295,19 +316,30 @@ def filter_page():
 
 @app.route('/search')
 def search():
+    page = request.args.get('page', 1, type=int)
+    per_page = 10
+    offset = (page - 1) * per_page
     q = request.args.get('q', '')
     conn = get_db()
     if q:
         search_term = f'%{q}%'
-        visitors = conn.execute("""
-            SELECT * FROM visitors
-            WHERE visitor_name LIKE? OR room_number LIKE? OR purpose LIKE? OR student_name LIKE?
-            ORDER BY id DESC
-        """, (search_term, search_term, search_term, search_term)).fetchall()
+        query = "SELECT * FROM visitors WHERE visitor_name LIKE? OR room_number LIKE? OR purpose LIKE? OR student_name LIKE? ORDER BY id DESC LIMIT? OFFSET?"
+        count_query = "SELECT COUNT(*) FROM visitors WHERE visitor_name LIKE? OR room_number LIKE? OR purpose LIKE? OR student_name LIKE?"
+        params = [search_term, search_term, search_term, search_term, per_page, offset]
+        count_params = [search_term, search_term, search_term, search_term]
     else:
-        visitors = conn.execute("SELECT * FROM visitors ORDER BY id DESC").fetchall()
+        query = "SELECT * FROM visitors ORDER BY id DESC LIMIT? OFFSET?"
+        count_query = "SELECT COUNT(*) FROM visitors"
+        params = [per_page, offset]
+        count_params = []
+    visitors = conn.execute(query, params).fetchall()
+    total = conn.execute(count_query, count_params).fetchone()[0]
+    total_pages = math.ceil(total / per_page) if total > 0 else 1
+    inside_count = conn.execute("SELECT COUNT(*) FROM visitors WHERE status = 'Inside'").fetchone()[0]
+    checkout_count = total - inside_count
+    rooms = conn.execute("SELECT DISTINCT room_number FROM visitors ORDER BY room_number").fetchall()
     conn.close()
-    return render_template('records.html', visitors=visitors)
+    return render_template('records.html', visitors=visitors, page=page, total_pages=total_pages, q=q, room=None, status=None, total_count=total, inside_count=inside_count, checkout_count=checkout_count, rooms=rooms)
 
 @app.route('/about')
 def about():
