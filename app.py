@@ -33,42 +33,45 @@ def get_db():
     conn.row_factory = sqlite3.Row
     return conn
 
+def calculate_time_spent(in_time_str, out_time_str):
+    try:
+        fmt = '%d-%m-%Y %I:%M %p'
+        in_dt = datetime.strptime(in_time_str, fmt)
+        out_dt = datetime.strptime(out_time_str, fmt)
+        diff = out_dt - in_dt
+        hours, remainder = divmod(diff.seconds, 3600)
+        minutes = remainder // 60
+        if hours > 0:
+            return f"{hours}h {minutes}m"
+        else:
+            return f"{minutes}m"
+    except:
+        return "N/A"
+
 @app.route('/')
 def home():
     conn = get_db()
-    # SIRF 5 RECENT VISITORS
     visitors = conn.execute("SELECT * FROM visitors ORDER BY id DESC LIMIT 5").fetchall()
-
-    # Counts for dashboard cards - full count
     total_count = conn.execute("SELECT COUNT(*) FROM visitors").fetchone()[0]
     inside_count = conn.execute("SELECT COUNT(*) FROM visitors WHERE status = 'Inside'").fetchone()[0]
     checkout_count = total_count - inside_count
     rooms = conn.execute("SELECT DISTINCT room_number FROM visitors ORDER BY room_number").fetchall()
     conn.close()
-
-    return render_template('home.html',
-                         visitors=visitors,
-                         total_count=total_count,
-                         inside_count=inside_count,
-                         checkout_count=checkout_count,
-                         rooms=rooms)
+    return render_template('home.html', visitors=visitors, total_count=total_count, inside_count=inside_count, checkout_count=checkout_count, rooms=rooms)
 
 @app.route('/records')
 def records():
     page = request.args.get('page', 1, type=int)
-    per_page = 10 # 10 records per page
+    per_page = 10
     offset = (page - 1) * per_page
-
     room = request.args.get('room')
     status = request.args.get('status')
     q = request.args.get('q')
-
     conn = get_db()
     query = "SELECT * FROM visitors WHERE 1=1"
     count_query = "SELECT COUNT(*) FROM visitors WHERE 1=1"
     params = []
     count_params = []
-
     if room:
         query += " AND room_number =?"
         count_query += " AND room_number =?"
@@ -84,41 +87,30 @@ def records():
         count_query += " AND visitor_name LIKE?"
         params.append(f"%{q}%")
         count_params.append(f"%{q}%")
-
     query += " ORDER BY id DESC LIMIT? OFFSET?"
     params.extend([per_page, offset])
-
     visitors = conn.execute(query, params).fetchall()
     total = conn.execute(count_query, count_params).fetchone()[0]
-
     inside_count = conn.execute("SELECT COUNT(*) FROM visitors WHERE status = 'Inside'").fetchone()[0]
     checkout_count = total - inside_count
     rooms = conn.execute("SELECT DISTINCT room_number FROM visitors ORDER BY room_number").fetchall()
     conn.close()
-
     total_pages = math.ceil(total / per_page) if total > 0 else 1
-
-    return render_template('records.html', visitors=visitors, page=page, total_pages=total_pages,
-                           room=room, status=status, q=q, total_count=total, inside_count=inside_count, checkout_count=checkout_count, rooms=rooms)
+    return render_template('records.html', visitors=visitors, page=page, total_pages=total_pages, room=room, status=status, q=q, total_count=total, inside_count=inside_count, checkout_count=checkout_count, rooms=rooms)
 
 @app.route('/export_csv')
 def export_csv():
     if session.get('role')!= 'admin':
         flash('Only admin can export data', 'danger')
         return redirect(url_for('home'))
-
     conn = get_db()
     visitors = conn.execute("SELECT * FROM visitors ORDER BY id DESC").fetchall()
     conn.close()
-
     si = StringIO()
     cw = csv.writer(si)
-    cw.writerow(['ID', 'Visitor Name', 'Student Name', 'Room No', 'Purpose', 'In Time', 'Out Time', 'Status', 'Photo'])
-
+    cw.writerow(['ID', 'Visitor Name', 'Contact No', 'Student Name', 'Room No', 'Purpose', 'In Time', 'Out Time', 'Time Spent', 'Status', 'Photo'])
     for v in visitors:
-        cw.writerow([v['id'], v['visitor_name'], v['student_name'], v['room_number'],
-                     v['purpose'], v['in_time'], v['out_time'], v['status'], v['photo']])
-
+        cw.writerow([v['id'], v['visitor_name'], v['contact_no'], v['student_name'], v['room_number'], v['purpose'], v['in_time'], v['out_time'], v['time_spent'], v['status'], v['photo']])
     output = make_response(si.getvalue())
     output.headers["Content-Disposition"] = "attachment; filename=visitor_report.csv"
     output.headers["Content-type"] = "text/csv"
@@ -129,11 +121,9 @@ def details(id):
     conn = get_db()
     visitor = conn.execute('SELECT * FROM visitors WHERE id =?', (id,)).fetchone()
     conn.close()
-
     if visitor is None:
         flash('Visitor not found', 'danger')
         return redirect(url_for('records'))
-
     return render_template('details.html', visitor=visitor)
 
 @app.route("/visitor/<int:id>/tip")
@@ -141,37 +131,27 @@ def get_visitor_tip(id):
     conn = get_db()
     visitor = conn.execute('SELECT * FROM visitors WHERE id =?', (id,)).fetchone()
     conn.close()
-
     if visitor is None:
         flash('Visitor not found', 'danger')
         return redirect(url_for('records'))
-
     out_time = visitor['out_time'] if visitor['out_time'] else "Not checked out yet"
     status = visitor['status']
-
-    prompt = f"""
-    Visitor name: {visitor['visitor_name']}
+    prompt = f"""Visitor name: {visitor['visitor_name']}
+    Contact: {visitor['contact_no']}
     Visiting Student: {visitor['student_name']}
     Room No: {visitor['room_number']}
     Purpose: {visitor['purpose']}
     In Time: {visitor['in_time']}
     Out Time: {out_time}
+    Time Spent: {visitor['time_spent']}
     Status: {status}
-
-    Based on this, give 1 practical security tip for the hostel guard.
-    Keep it simple, encouraging, and not more than 2 lines.
-    """
-
+    Based on this, give 1 practical security tip for the hostel guard. Keep it simple, encouraging, and not more than 2 lines."""
     try:
         client = Groq(api_key=os.getenv("GROQ_API_KEY"))
-        response = client.chat.completions.create(
-            model="llama-3.1-8b-instant",
-            messages=[{"role": "user", "content": prompt}]
-        )
+        response = client.chat.completions.create(model="llama-3.1-8b-instant", messages=[{"role": "user", "content": prompt}])
         tip = response.choices[0].message.content
     except Exception as e:
         tip = "AI tip service is currently unavailable. Please check your GROQ_API_KEY."
-
     return render_template("details.html", visitor=visitor, tip=tip)
 
 @app.route('/add_visitor', methods=['GET', 'POST'])
@@ -181,65 +161,58 @@ def add_visitor():
         return redirect(url_for('home'))
     if request.method == 'POST':
         visitor_name = request.form['visitor_name']
+        contact_no = request.form['contact_no']
         student_name = request.form['student_name']
         room_number = request.form['room_number']
         purpose = request.form['purpose']
-
         file = request.files.get('photo')
         photo_filename = 'default.png'
         if file and file.filename and allowed_file(file.filename):
             photo_filename = secure_filename(file.filename)
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], photo_filename))
-
-        if not visitor_name or not student_name or not room_number or not purpose:
+        if not visitor_name or not contact_no or not student_name or not room_number or not purpose:
             flash('Please complete all fields', 'danger')
             return render_template('add_visitor.html')
-
         in_time = datetime.now().strftime('%d-%m-%Y %I:%M %p')
-
         conn = get_db()
-        conn.execute("""
-            INSERT INTO visitors (visitor_name, student_name, room_number, purpose, in_time, status, photo)
-            VALUES (?,?,?,?,?,?,?)
-        """, (visitor_name, student_name, room_number, purpose, in_time, 'Inside', photo_filename))
+        conn.execute("""INSERT INTO visitors (visitor_name, contact_no, student_name, room_number, purpose, in_time, status, photo) VALUES (?,?,?,?,?,?,?,?)""", (visitor_name, contact_no, student_name, room_number, purpose, in_time, 'Inside', photo_filename))
         conn.commit()
         conn.close()
-
         flash(f'Visitor {visitor_name} added successfully', 'success')
         return redirect(url_for('records'))
-
     return render_template('add_visitor.html')
 
-@app.route('/edit_visitor/<int:id>', methods=['GET', 'POST'])
+@app.route('/edit_visitor/<int:id>', methods=['GET', 'POST']) # UPDATED
 def edit_visitor(id):
     if session.get('role')!= 'admin':
         flash('You do not have permission to edit visitors', 'danger')
         return redirect(url_for('home'))
     conn = get_db()
     visitor = conn.execute('SELECT * FROM visitors WHERE id =?', (id,)).fetchone()
-
     if visitor is None:
         conn.close()
         flash('Visitor not found', 'danger')
         return redirect(url_for('records'))
-
     if request.method == 'POST':
         visitor_name = request.form['visitor_name']
+        contact_no = request.form['contact_no'] # NAYA
         student_name = request.form['student_name']
         room_number = request.form['room_number']
         purpose = request.form['purpose']
 
-        conn.execute("""
-            UPDATE visitors
-            SET visitor_name=?, student_name=?, room_number=?, purpose=?
-            WHERE id=?
-        """, (visitor_name, student_name, room_number, purpose, id))
+        # NAYA: PHOTO UPDATE LOGIC
+        photo_filename = visitor['photo'] # purani photo
+        file = request.files.get('photo')
+        if file and file.filename and allowed_file(file.filename):
+            photo_filename = secure_filename(file.filename)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], photo_filename))
+
+        conn.execute("""UPDATE visitors SET visitor_name=?, contact_no=?, student_name=?, room_number=?, purpose=?, photo=? WHERE id=?""",
+                     (visitor_name, contact_no, student_name, room_number, purpose, photo_filename, id)) # NAYA: photo add
         conn.commit()
         conn.close()
-
         flash('Visitor updated successfully', 'success')
         return redirect(url_for('records'))
-
     conn.close()
     return render_template('edit_visitor.html', visitor=visitor)
 
@@ -258,21 +231,15 @@ def delete_visitor(id):
 @app.route('/checkout_visitor/<int:id>', methods=['POST'])
 def checkout_visitor(id):
     conn = get_db()
-    out_time = datetime.now().strftime('%d-%m-%Y %I:%M %p')
-
-    cursor = conn.execute("""
-        UPDATE visitors
-        SET status = 'Left', out_time =?
-        WHERE id =? AND status = 'Inside'
-    """, (out_time, id))
-
-    conn.commit()
-
-    if cursor.rowcount == 0:
-        flash('Visitor not found or already checked out', 'danger')
+    visitor = conn.execute('SELECT * FROM visitors WHERE id =? AND status = "Inside"', (id,)).fetchone()
+    if visitor:
+        out_time = datetime.now().strftime('%d-%m-%Y %I:%M %p')
+        time_spent = calculate_time_spent(visitor['in_time'], out_time)
+        conn.execute("""UPDATE visitors SET status = 'Left', out_time =?, time_spent =? WHERE id =?""", (out_time, time_spent, id))
+        conn.commit()
+        flash(f'Visitor checked out. Time Spent: {time_spent}', 'success')
     else:
-        flash('Visitor checked out successfully', 'success')
-
+        flash('Visitor not found or already checked out', 'danger')
     conn.close()
     return redirect(url_for('records'))
 
@@ -281,11 +248,9 @@ def filter_page():
     room = request.args.get('room')
     purpose = request.args.get('purpose')
     status = request.args.get('status')
-
     conn = get_db()
     query = "SELECT * FROM visitors WHERE 1=1"
     params = []
-
     if room:
         query += ' AND room_number =?'
         params.append(room)
@@ -295,24 +260,12 @@ def filter_page():
     if status:
         query += ' AND status =?'
         params.append(status)
-
     query += ' ORDER BY in_time DESC'
     visitors = conn.execute(query, params).fetchall()
-
     rooms = conn.execute('SELECT DISTINCT room_number FROM visitors ORDER BY room_number').fetchall()
     purposes = conn.execute('SELECT DISTINCT purpose FROM visitors ORDER BY purpose').fetchall()
-
     conn.close()
-
-    return render_template(
-        'filter.html',
-        visitors=visitors,
-        rooms=rooms,
-        purposes=purposes,
-        selected_room=room,
-        selected_purpose=purpose,
-        selected_status=status
-    )
+    return render_template('filter.html', visitors=visitors, rooms=rooms, purposes=purposes, selected_room=room, selected_purpose=purpose, selected_status=status)
 
 @app.route('/search')
 def search():
@@ -323,10 +276,10 @@ def search():
     conn = get_db()
     if q:
         search_term = f'%{q}%'
-        query = "SELECT * FROM visitors WHERE visitor_name LIKE? OR room_number LIKE? OR purpose LIKE? OR student_name LIKE? ORDER BY id DESC LIMIT? OFFSET?"
-        count_query = "SELECT COUNT(*) FROM visitors WHERE visitor_name LIKE? OR room_number LIKE? OR purpose LIKE? OR student_name LIKE?"
-        params = [search_term, search_term, search_term, search_term, per_page, offset]
-        count_params = [search_term, search_term, search_term, search_term]
+        query = "SELECT * FROM visitors WHERE visitor_name LIKE? OR contact_no LIKE? OR room_number LIKE? OR purpose LIKE? OR student_name LIKE? ORDER BY id DESC LIMIT? OFFSET?"
+        count_query = "SELECT COUNT(*) FROM visitors WHERE visitor_name LIKE? OR contact_no LIKE? OR room_number LIKE? OR purpose LIKE? OR student_name LIKE?"
+        params = [search_term, search_term, search_term, search_term, search_term, per_page, offset]
+        count_params = [search_term, search_term, search_term, search_term, search_term]
     else:
         query = "SELECT * FROM visitors ORDER BY id DESC LIMIT? OFFSET?"
         count_query = "SELECT COUNT(*) FROM visitors"
@@ -350,25 +303,21 @@ def register():
     if request.method == 'POST':
         username = request.form['username'].strip()
         password = request.form['password']
-
         if not username or not password:
             flash('Username and password required', 'danger')
             return render_template('register.html')
-
         conn = get_db()
         existing = conn.execute('SELECT * FROM users WHERE username =?', (username,)).fetchone()
         if existing:
             flash('Username already exists!', 'danger')
             conn.close()
             return render_template('register.html')
-
         hashed = generate_password_hash(password)
         conn.execute('INSERT INTO users (username, password, role) VALUES (?,?,?)', (username, hashed, 'user'))
         conn.commit()
         conn.close()
         flash('Registration successful! Please login.', 'success')
         return redirect(url_for('login'))
-
     return render_template("register.html")
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -376,11 +325,9 @@ def login():
     if request.method == 'POST':
         username = request.form['username'].strip()
         password = request.form['password']
-
         conn = get_db()
         user = conn.execute('SELECT * FROM users WHERE username =?', (username,)).fetchone()
         conn.close()
-
         if user and check_password_hash(user['password'], password):
             session['username'] = username
             session['role'] = user['role']

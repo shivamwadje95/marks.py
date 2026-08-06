@@ -86,10 +86,12 @@
             <tr>
                 <th>#</th>
                 <th>Visiting</th>
+                <th>Contact No</th> 
                 <th>Room</th>
                 <th>Purpose</th>
                 <th>In Time</th>
                 <th>Out Time</th>
+                <th>Time Spent</th> 
                 <th>Status</th>
                 <th width="380px" class="text-center">Action</th>
             </tr>
@@ -97,7 +99,7 @@
         <tbody>
             {% for visitor in visitors %}
             <tr>
-                <td>{{ (page - 1) * 10 + loop.index }}</td> <!-- Serial number sahi rahega -->
+                <td>{{ (page - 1) * 10 + loop.index }}</td>
                 <td class="visitor-name">
                     <div class="d-flex align-items-center">
                         <a href="{{ url_for('details', id=visitor.id) }}">
@@ -109,10 +111,12 @@
                         {{ visitor.visitor_name }}
                     </div>
                 </td>
+                <td>{{ visitor.contact_no or '-' }}</td> 
                 <td>{{ visitor.room_number }}</td>
                 <td>{{ visitor.purpose }}</td>
                 <td>{{ visitor.in_time }}</td>
                 <td>{{ visitor.out_time or 'Still Inside' }}</td>
+                <td><b>{{ visitor.time_spent or '-' }}</b></td> 
                 <td>
                     <span class="badge {% if visitor.status == 'Inside' %}bg-success{% else %}bg-secondary{% endif %}">
                         {{ visitor.status }}

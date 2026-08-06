@@ -6,11 +6,18 @@
     <div class="col-md-6">
         <div class="card shadow-sm">
             <div class="card-body">
-                <form method="POST" enctype="multipart/form-data"> <!-- CHANGE 1 -->
+                <form method="POST" enctype="multipart/form-data">
                     <div class="mb-3">
                         <label class="form-label">Visitor Name</label>
                         <input type="text" class="form-control" name="visitor_name" required>
                     </div>
+
+                    <!-- NAYA CONTACT NO FIELD -->
+                    <div class="mb-3">
+                        <label class="form-label">Contact No</label>
+                        <input type="tel" class="form-control" name="contact_no" placeholder="10 digit mobile" required>
+                    </div>
+
                     <div class="mb-3">
                         <label class="form-label">Student to Visit</label>
                         <input type="text" class="form-control" name="student_name" required>

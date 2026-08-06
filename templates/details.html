@@ -33,6 +33,13 @@
                     <th width="200">Visitor Name:</th>
                     <td>{{ visitor['visitor_name'] }}</td>
                 </tr>
+
+                <!--  CONTACT NO -->
+                <tr>
+                    <th>Contact No:</th>
+                    <td>{{ visitor['contact_no'] }}</td>
+                </tr>
+
                 <tr>
                     <th>Visiting Student:</th>
                     <td>{{ visitor['student_name'] }}</td>
@@ -53,6 +60,13 @@
                     <th>Out Time:</th>
                     <td>{{ visitor['out_time'] if visitor['out_time'] else 'Not checked out yet' }}</td>
                 </tr>
+
+                <!--  TIME SPENT -->
+                <tr>
+                    <th>Time Spent:</th>
+                    <td>{{ visitor['time_spent'] if visitor['time_spent'] else '-' }}</td>
+                </tr>
+
                 <tr>
                     <th>Status:</th>
                     <td>

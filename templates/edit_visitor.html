@@ -20,12 +20,26 @@
                     </small>
                 </div>
 
-                <form method="POST" action="{{ url_for('edit_visitor', id=visitor.id) }}">
+                <form method="POST" action="{{ url_for('edit_visitor', id=visitor.id) }}" enctype="multipart/form-data"> <!-- CHANGE: enctype add -->
                     
+                    <!-- PHOTO PREVIEW + UPLOAD -->
+                    <div class="text-center mb-3">
+                        <img src="{{ url_for('static', filename='uploads/' + visitor.photo) }}" 
+                             class="rounded-circle mb-2 border" width="90" height="90" style="object-fit:cover;">
+                        <div class="form-text">Current Photo</div>
+                    </div>
+
                     <div class="mb-3">
                         <label class="form-label">Visiting</label>
                         <input type="text" class="form-control" name="visiting" 
                                value="{{ visitor.visiting }}" required>
+                    </div>
+
+                    <!-- NEW CONTACT NO -->
+                    <div class="mb-3">
+                        <label class="form-label">Contact No</label>
+                        <input type="tel" class="form-control" name="contact_no" 
+                               value="{{ visitor.contact_no }}" required>
                     </div>
 
                     <div class="mb-3">
@@ -43,7 +57,22 @@
                     <div class="mb-3">
                         <label class="form-label">In Time</label>
                         <input type="text" class="form-control" name="in_time" 
-                               value="{{ visitor.in_time }}" required>
+                               value="{{ visitor.in_time }}" readonly>
+                    </div>
+
+                    <!-- NEW TIME SPENT -->
+                    <div class="mb-3">
+                        <label class="form-label">Time Spent</label>
+                        <input type="text" class="form-control" name="time_spent" 
+                               value="{{ visitor.time_spent or '-' }}" readonly>
+                        <div class="form-text">Ye auto calculate hota hai Checkout ke baad</div>
+                    </div>
+
+                    <!-- NAYA PHOTO UPLOAD -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Change Photo</label>
+                        <input type="file" name="photo" class="form-control" accept="image/*">
+                        <div class="form-text">Nayi photo select nahi karoge to purani hi rahegi</div>
                     </div>
 
                     <div class="mb-4">
