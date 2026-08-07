@@ -6,7 +6,7 @@ from flask import Flask, redirect, render_template, request, url_for, flash, ses
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 import sqlite3
-from datetime import datetime
+from datetime import datetime, timedelta
 from init_db import init_db
 from groq import Groq
 from dotenv import load_dotenv
@@ -48,6 +48,12 @@ def calculate_time_spent(in_time_str, out_time_str):
     except:
         return "N/A"
 
+# NEW HELPER: Day count
+def get_day_count(conn, day_date):
+    day_str = day_date.strftime('%d-%m-%Y')
+    cursor = conn.execute("SELECT COUNT(*) FROM visitors WHERE in_time LIKE?", (f'{day_str}%',))
+    return cursor.fetchone()[0]
+
 @app.route('/')
 def home():
     conn = get_db()
@@ -56,8 +62,49 @@ def home():
     inside_count = conn.execute("SELECT COUNT(*) FROM visitors WHERE status = 'Inside'").fetchone()[0]
     checkout_count = total_count - inside_count
     rooms = conn.execute("SELECT DISTINCT room_number FROM visitors ORDER BY room_number").fetchall()
+
+    # 7 DAYS CHART DATA for Home
+    labels = []
+    data = []
+    for i in range(6, -1, -1): # last 7 days
+        day = datetime.now() - timedelta(days=i)
+        labels.append(day.strftime("%a")) # Mon, Tue
+        data.append(get_day_count(conn, day))
+
     conn.close()
-    return render_template('home.html', visitors=visitors, total_count=total_count, inside_count=inside_count, checkout_count=checkout_count, rooms=rooms)
+    return render_template('home.html', visitors=visitors, total_count=total_count,
+                           inside_count=inside_count, checkout_count=checkout_count,
+                           rooms=rooms, labels=labels, data=data)
+
+@app.route('/dashboard') # ROUTE: Full Dashboard - Admin Only
+def dashboard():
+    if session.get('role')!= 'admin':
+        flash('Only admin can view dashboard', 'danger')
+        return redirect(url_for('home'))
+
+    conn = get_db()
+    total_count = conn.execute("SELECT COUNT(*) FROM visitors").fetchone()[0]
+    inside_count = conn.execute("SELECT COUNT(*) FROM visitors WHERE status = 'Inside'").fetchone()[0]
+    checkout_count = total_count - inside_count
+
+    # 30 DAYS CHART DATA for Dashboard
+    labels = []
+    data = []
+    for i in range(29, -1, -1):
+        day = datetime.now() - timedelta(days=i)
+        labels.append(day.strftime("%d %b")) # 01 Aug
+        data.append(get_day_count(conn, day))
+
+    # Top 5 Rooms
+    top_rooms = conn.execute("SELECT room_number, COUNT(*) as c FROM visitors GROUP BY room_number ORDER BY c DESC LIMIT 5").fetchall()
+    conn.close()
+
+    return render_template('dashboard.html',
+                           total_count=total_count,
+                           inside_count=inside_count,
+                           checkout_count=checkout_count,
+                           labels=labels, data=data,
+                           top_rooms=top_rooms)
 
 @app.route('/records')
 def records():
@@ -182,7 +229,7 @@ def add_visitor():
         return redirect(url_for('records'))
     return render_template('add_visitor.html')
 
-@app.route('/edit_visitor/<int:id>', methods=['GET', 'POST']) # UPDATED
+@app.route('/edit_visitor/<int:id>', methods=['GET', 'POST'])
 def edit_visitor(id):
     if session.get('role')!= 'admin':
         flash('You do not have permission to edit visitors', 'danger')
@@ -195,20 +242,17 @@ def edit_visitor(id):
         return redirect(url_for('records'))
     if request.method == 'POST':
         visitor_name = request.form['visitor_name']
-        contact_no = request.form['contact_no'] # NAYA
+        contact_no = request.form['contact_no']
         student_name = request.form['student_name']
         room_number = request.form['room_number']
         purpose = request.form['purpose']
-
-        # NAYA: PHOTO UPDATE LOGIC
-        photo_filename = visitor['photo'] # purani photo
+        photo_filename = visitor['photo']
         file = request.files.get('photo')
         if file and file.filename and allowed_file(file.filename):
             photo_filename = secure_filename(file.filename)
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], photo_filename))
-
         conn.execute("""UPDATE visitors SET visitor_name=?, contact_no=?, student_name=?, room_number=?, purpose=?, photo=? WHERE id=?""",
-                     (visitor_name, contact_no, student_name, room_number, purpose, photo_filename, id)) # NAYA: photo add
+                     (visitor_name, contact_no, student_name, room_number, purpose, photo_filename, id))
         conn.commit()
         conn.close()
         flash('Visitor updated successfully', 'success')
@@ -243,8 +287,13 @@ def checkout_visitor(id):
     conn.close()
     return redirect(url_for('records'))
 
-@app.route('/filter')
+@app.route('/filter') # ROUTE: Filter - Admin Only
 def filter_page():
+    # YE NAYA ADMIN CHECK HAI
+    if session.get('role')!= 'admin':
+        flash('Only admin can use filter', 'danger')
+        return redirect(url_for('home'))
+
     room = request.args.get('room')
     purpose = request.args.get('purpose')
     status = request.args.get('status')

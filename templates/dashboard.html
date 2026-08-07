@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% block title %}Full Dashboard — Hostel Visitor Log{% endblock %}
+
+{% block content %}
+<h2 class="fw-bold mb-4">📊 Full Analytics Dashboard</h2>
+
+<!-- Stats Row -->
+<div class="row mb-4">
+    <div class="col-md-4"><div class="card p-3 bg-primary bg-opacity-10"><h2 class="fw-bold text-primary">{{ total_count }}</h2><p>Total Visitors</p></div></div>
+    <div class="col-md-4"><div class="card p-3 bg-success bg-opacity-10"><h2 class="fw-bold text-success">{{ inside_count }}</h2><p>Currently Inside</p></div></div>
+    <div class="col-md-4"><div class="card p-3 bg-secondary bg-opacity-10"><h2 class="fw-bold text-secondary">{{ checkout_count }}</h2><p>Checked Out</p></div></div>
+</div>
+
+<div class="row">
+    <!-- Bada Chart -->
+    <div class="col-lg-8 mb-4">
+        <div class="card">
+            <div class="card-header"><h5 class="fw-bold">Last 30 Days Visitor Trend</h5></div>
+            <div class="card-body"><canvas id="dashboardChart" height="120"></canvas></div>
+        </div>
+    </div>
+    
+    <!-- Top Rooms -->
+    <div class="col-lg-4 mb-4">
+        <div class="card">
+            <div class="card-header"><h5 class="fw-bold">Top 5 Visited Rooms</h5></div>
+            <div class="card-body">
+                <ul class="list-group">
+                {% for room in top_rooms %}
+                    <li class="list-group-item d-flex justify-content-between">
+                        Room {{ room['room_number'] }} <span class="badge bg-primary">{{ room['c'] }} visits</span>
+                    </li>
+                {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctx = document.getElementById('dashboardChart');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: {{ labels | tojson }},
+            datasets: [{
+                label: 'Visitors',
+                data: {{ data | tojson }},
+                backgroundColor: '#0d6efd'
+            }]
+        },
+        options: { responsive: true, scales: { y: { beginAtZero: true } } }
+    });
+</script>
+{% endblock %}
