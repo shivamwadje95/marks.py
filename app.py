@@ -1,6 +1,7 @@
 import os
 import csv
 import math
+import pytz
 from io import StringIO
 from flask import Flask, redirect, render_template, request, url_for, flash, session, make_response
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -48,7 +49,6 @@ def calculate_time_spent(in_time_str, out_time_str):
     except:
         return "N/A"
 
-# NEW HELPER: Day count
 def get_day_count(conn, day_date):
     day_str = day_date.strftime('%d-%m-%Y')
     cursor = conn.execute("SELECT COUNT(*) FROM visitors WHERE in_time LIKE?", (f'{day_str}%',))
@@ -63,12 +63,11 @@ def home():
     checkout_count = total_count - inside_count
     rooms = conn.execute("SELECT DISTINCT room_number FROM visitors ORDER BY room_number").fetchall()
 
-    # 7 DAYS CHART DATA for Home
     labels = []
     data = []
-    for i in range(6, -1, -1): # last 7 days
+    for i in range(6, -1, -1):
         day = datetime.now() - timedelta(days=i)
-        labels.append(day.strftime("%a")) # Mon, Tue
+        labels.append(day.strftime("%a"))
         data.append(get_day_count(conn, day))
 
     conn.close()
@@ -76,26 +75,21 @@ def home():
                            inside_count=inside_count, checkout_count=checkout_count,
                            rooms=rooms, labels=labels, data=data)
 
-@app.route('/dashboard') # ROUTE: Full Dashboard - Admin Only
+@app.route('/dashboard') # CHANGE 1: ADMIN CHECK HATA DIYA
 def dashboard():
-    if session.get('role')!= 'admin':
-        flash('Only admin can view dashboard', 'danger')
-        return redirect(url_for('home'))
-
+    # Sab dekh sakte hai ab
     conn = get_db()
     total_count = conn.execute("SELECT COUNT(*) FROM visitors").fetchone()[0]
     inside_count = conn.execute("SELECT COUNT(*) FROM visitors WHERE status = 'Inside'").fetchone()[0]
     checkout_count = total_count - inside_count
 
-    # 30 DAYS CHART DATA for Dashboard
     labels = []
     data = []
     for i in range(29, -1, -1):
         day = datetime.now() - timedelta(days=i)
-        labels.append(day.strftime("%d %b")) # 01 Aug
+        labels.append(day.strftime("%d %b"))
         data.append(get_day_count(conn, day))
 
-    # Top 5 Rooms
     top_rooms = conn.execute("SELECT room_number, COUNT(*) as c FROM visitors GROUP BY room_number ORDER BY c DESC LIMIT 5").fetchall()
     conn.close()
 
@@ -147,7 +141,7 @@ def records():
 
 @app.route('/export_csv')
 def export_csv():
-    if session.get('role')!= 'admin':
+    if session.get('role')!= 'admin': # YE LOCK RAHEGA
         flash('Only admin can export data', 'danger')
         return redirect(url_for('home'))
     conn = get_db()
@@ -203,7 +197,7 @@ def get_visitor_tip(id):
 
 @app.route('/add_visitor', methods=['GET', 'POST'])
 def add_visitor():
-    if session.get('role')!= 'admin':
+    if session.get('role')!= 'admin': 
         flash('You do not have permission to add visitors', 'danger')
         return redirect(url_for('home'))
     if request.method == 'POST':
@@ -220,7 +214,7 @@ def add_visitor():
         if not visitor_name or not contact_no or not student_name or not room_number or not purpose:
             flash('Please complete all fields', 'danger')
             return render_template('add_visitor.html')
-        in_time = datetime.now().strftime('%d-%m-%Y %I:%M %p')
+        in_time = datetime.now(pytz.timezone('Asia/Kolkata')).strftime('%d-%m-%Y %I:%M %p')
         conn = get_db()
         conn.execute("""INSERT INTO visitors (visitor_name, contact_no, student_name, room_number, purpose, in_time, status, photo) VALUES (?,?,?,?,?,?,?,?)""", (visitor_name, contact_no, student_name, room_number, purpose, in_time, 'Inside', photo_filename))
         conn.commit()
@@ -231,7 +225,7 @@ def add_visitor():
 
 @app.route('/edit_visitor/<int:id>', methods=['GET', 'POST'])
 def edit_visitor(id):
-    if session.get('role')!= 'admin':
+    if session.get('role')!= 'admin': 
         flash('You do not have permission to edit visitors', 'danger')
         return redirect(url_for('home'))
     conn = get_db()
@@ -262,7 +256,7 @@ def edit_visitor(id):
 
 @app.route('/delete_visitor/<int:id>', methods=['POST'])
 def delete_visitor(id):
-    if session.get('role')!= 'admin':
+    if session.get('role')!= 'admin': 
         flash('You do not have permission to delete visitors', 'danger')
         return redirect(url_for('home'))
     conn = get_db()
@@ -277,7 +271,7 @@ def checkout_visitor(id):
     conn = get_db()
     visitor = conn.execute('SELECT * FROM visitors WHERE id =? AND status = "Inside"', (id,)).fetchone()
     if visitor:
-        out_time = datetime.now().strftime('%d-%m-%Y %I:%M %p')
+        out_time = datetime.now(pytz.timezone('Asia/Kolkata')).strftime('%d-%m-%Y %I:%M %p')
         time_spent = calculate_time_spent(visitor['in_time'], out_time)
         conn.execute("""UPDATE visitors SET status = 'Left', out_time =?, time_spent =? WHERE id =?""", (out_time, time_spent, id))
         conn.commit()
@@ -287,13 +281,9 @@ def checkout_visitor(id):
     conn.close()
     return redirect(url_for('records'))
 
-@app.route('/filter') # ROUTE: Filter - Admin Only
+@app.route('/filter') 
 def filter_page():
-    # YE NAYA ADMIN CHECK HAI
-    if session.get('role')!= 'admin':
-        flash('Only admin can use filter', 'danger')
-        return redirect(url_for('home'))
-
+    # Sab dekh sakte hai ab
     room = request.args.get('room')
     purpose = request.args.get('purpose')
     status = request.args.get('status')
