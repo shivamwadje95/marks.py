@@ -75,9 +75,8 @@ def home():
                            inside_count=inside_count, checkout_count=checkout_count,
                            rooms=rooms, labels=labels, data=data)
 
-@app.route('/dashboard') # CHANGE 1: ADMIN CHECK HATA DIYA
+@app.route('/dashboard')
 def dashboard():
-    # Sab dekh sakte hai ab
     conn = get_db()
     total_count = conn.execute("SELECT COUNT(*) FROM visitors").fetchone()[0]
     inside_count = conn.execute("SELECT COUNT(*) FROM visitors WHERE status = 'Inside'").fetchone()[0]
@@ -141,7 +140,7 @@ def records():
 
 @app.route('/export_csv')
 def export_csv():
-    if session.get('role')!= 'admin': # YE LOCK RAHEGA
+    if session.get('role')!= 'admin':
         flash('Only admin can export data', 'danger')
         return redirect(url_for('home'))
     conn = get_db()
@@ -197,7 +196,7 @@ def get_visitor_tip(id):
 
 @app.route('/add_visitor', methods=['GET', 'POST'])
 def add_visitor():
-    if session.get('role')!= 'admin': 
+    if session.get('role')!= 'admin':
         flash('You do not have permission to add visitors', 'danger')
         return redirect(url_for('home'))
     if request.method == 'POST':
@@ -225,7 +224,7 @@ def add_visitor():
 
 @app.route('/edit_visitor/<int:id>', methods=['GET', 'POST'])
 def edit_visitor(id):
-    if session.get('role')!= 'admin': 
+    if session.get('role')!= 'admin':
         flash('You do not have permission to edit visitors', 'danger')
         return redirect(url_for('home'))
     conn = get_db()
@@ -256,7 +255,7 @@ def edit_visitor(id):
 
 @app.route('/delete_visitor/<int:id>', methods=['POST'])
 def delete_visitor(id):
-    if session.get('role')!= 'admin': 
+    if session.get('role')!= 'admin':
         flash('You do not have permission to delete visitors', 'danger')
         return redirect(url_for('home'))
     conn = get_db()
@@ -281,30 +280,54 @@ def checkout_visitor(id):
     conn.close()
     return redirect(url_for('records'))
 
-@app.route('/filter') 
+@app.route('/filter')
 def filter_page():
-    # Sab dekh sakte hai ab
-    room = request.args.get('room')
-    purpose = request.args.get('purpose')
-    status = request.args.get('status')
+    # Pagination add kiya
+    page = request.args.get('page', 1, type=int)
+    per_page = 10
+    offset = (page - 1) * per_page
+
+    room = request.args.get('room', '')
+    purpose = request.args.get('purpose', '')
+    status = request.args.get('status', '')
+
     conn = get_db()
+
     query = "SELECT * FROM visitors WHERE 1=1"
+    count_query = "SELECT COUNT(*) FROM visitors WHERE 1=1"
     params = []
+    count_params = []
+
     if room:
-        query += ' AND room_number =?'
+        query += " AND room_number =?"
+        count_query += " AND room_number =?"
         params.append(room)
+        count_params.append(room)
     if purpose:
-        query += ' AND purpose =?'
+        query += " AND purpose =?"
+        count_query += " AND purpose =?"
         params.append(purpose)
+        count_params.append(purpose)
     if status:
-        query += ' AND status =?'
+        query += " AND status =?"
+        count_query += " AND status =?"
         params.append(status)
-    query += ' ORDER BY in_time DESC'
+        count_params.append(status)
+
+    query += " ORDER BY in_time DESC LIMIT? OFFSET?"
+    params.extend([per_page, offset])
+
     visitors = conn.execute(query, params).fetchall()
+    total = conn.execute(count_query, count_params).fetchone()[0]
+    total_pages = math.ceil(total / per_page) if total > 0 else 1
+
     rooms = conn.execute('SELECT DISTINCT room_number FROM visitors ORDER BY room_number').fetchall()
     purposes = conn.execute('SELECT DISTINCT purpose FROM visitors ORDER BY purpose').fetchall()
     conn.close()
-    return render_template('filter.html', visitors=visitors, rooms=rooms, purposes=purposes, selected_room=room, selected_purpose=purpose, selected_status=status)
+
+    return render_template('filter.html', visitors=visitors, rooms=rooms, purposes=purposes,
+                           selected_room=room, selected_purpose=purpose, selected_status=status,
+                           page=page, total_pages=total_pages)
 
 @app.route('/search')
 def search():
