@@ -2,43 +2,181 @@
 {% block title %}Full Dashboard — Hostel Visitor Log{% endblock %}
 
 {% block content %}
-<h2 class="fw-bold mb-4">📊 Full Analytics Dashboard</h2>
+<div class="container-fluid py-4">
+    
+    <!-- HEADER -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-0" style="color: #064e3b;">
+                <i class="bi bi-graph-up"></i> Full Analytics Dashboard
+            </h2>
+            <p class="text-muted mb-0">Monitor all visitor activity at a glance</p>
+        </div>
+        <span class="badge fs-6 px-3 py-2" style="background: linear-gradient(90deg, #059669, #047857); border-radius: 50px;">Live</span>
+    </div>
 
-<!-- Stats Row -->
-<div class="row mb-4">
-    <div class="col-md-4"><div class="card p-3 bg-primary bg-opacity-10"><h2 class="fw-bold text-primary">{{ total_count }}</h2><p>Total Visitors</p></div></div>
-    <div class="col-md-4"><div class="card p-3 bg-success bg-opacity-10"><h2 class="fw-bold text-success">{{ inside_count }}</h2><p>Currently Inside</p></div></div>
-    <div class="col-md-4"><div class="card p-3 bg-secondary bg-opacity-10"><h2 class="fw-bold text-secondary">{{ checkout_count }}</h2><p>Checked Out</p></div></div>
-</div>
-
-<div class="row">
-    <!-- Bada Chart -->
-    <div class="col-lg-8 mb-4">
-        <div class="card">
-            <div class="card-header"><h5 class="fw-bold">Last 30 Days Visitor Trend</h5></div>
-            <div class="card-body"><canvas id="dashboardChart" height="120"></canvas></div>
+    <!-- Stats Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="stat-label">Total Visitors</p>
+                        <h2 class="stat-number" style="color: #3b82f6;">{{ total_count }}</h2>
+                    </div>
+                    <div class="stat-icon" style="background: #eff6ff; color: #3b82f6;">
+                        <i class="bi bi-people-fill"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="stat-label">Currently Inside</p>
+                        <h2 class="stat-number" style="color: #10b981;">{{ inside_count }}</h2>
+                    </div>
+                    <div class="stat-icon" style="background: #ecfdf5; color: #10b981;">
+                        <i class="bi bi-door-open-fill"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="stat-label">Checked Out</p>
+                        <h2 class="stat-number" style="color: #6b7280;">{{ checkout_count }}</h2>
+                    </div>
+                    <div class="stat-icon" style="background: #f3f4f6; color: #6b7280;">
+                        <i class="bi bi-door-closed-fill"></i>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-    
-    <!-- Top Rooms -->
-    <div class="col-lg-4 mb-4">
-        <div class="card">
-            <div class="card-header"><h5 class="fw-bold">Top 5 Visited Rooms</h5></div>
-            <div class="card-body">
-                <ul class="list-group">
-                {% for room in top_rooms %}
-                    <li class="list-group-item d-flex justify-content-between">
-                        Room {{ room['room_number'] }} <span class="badge bg-primary">{{ room['c'] }} visits</span>
-                    </li>
-                {% endfor %}
-                </ul>
+
+    <div class="row g-4">
+        <!-- Bada 30 Days Chart -->
+        <div class="col-lg-8">
+            <div class="pro-card">
+                <div class="card-header-custom">
+                    <h5 class="fw-bold mb-0" style="color: #064e3b;">
+                        <i class="bi bi-bar-chart-line"></i> Last 30 Days Visitor Trend
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <canvas id="dashboardChart" height="120"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Top 5 Rooms -->
+        <div class="col-lg-4">
+            <div class="pro-card">
+                <div class="card-header-custom">
+                    <h5 class="fw-bold mb-0" style="color: #064e3b;">
+                        <i class="bi bi-award"></i> Top 5 Visited Rooms
+                    </h5>
+                </div>
+                <div class="card-body p-3">
+                    {% for room in top_rooms %}
+                    <div class="room-item">
+                        <span><i class="bi bi-door-closed"></i> Room {{ room['room_number'] }}</span> 
+                        <span class="badge-room">{{ room['c'] }} visits</span>
+                    </div>
+                    {% else %}
+                    <p class="text-center text-muted mt-3">No data yet</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- PURPOSE PIE CHART - FULL WIDTH -->
+        <div class="col-lg-12">
+            <div class="pro-card">
+                <div class="card-header-custom">
+                    <h5 class="fw-bold mb-0" style="color: #064e3b;">
+                        <i class="bi bi-pie-chart"></i> Visitors by Purpose
+                    </h5>
+                </div>
+                <div class="card-body p-4 pb-5">  
+              <div style="max-width: 500px; margin: 0 auto;">
+                    <canvas id="purposeChart"></canvas>
+             </div>
+            </div>
             </div>
         </div>
     </div>
 </div>
 
+<style>
+.stat-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 16px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+    border-left: 5px solid;
+}
+.stat-card:nth-child(1) { border-left-color: #3b82f6; }
+.stat-card:nth-child(2) { border-left-color: #10b981; }
+.stat-card:nth-child(3) { border-left-color: #6b7280; }
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(5, 150, 105, 0.1);
+}
+.stat-label { color: #6b7280; margin-bottom: 0.5rem; font-size: 0.9rem; }
+.stat-number { font-weight: 800; font-size: 2.2rem; margin: 0; }
+.stat-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+}
+.pro-card {
+    background: white;
+    border-radius: 16px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    overflow: hidden;
+}
+.card-header-custom {
+    background: #f0fdf4;
+    padding: 1.2rem 1.5rem;
+    border-bottom: 1px solid #d1fae5;
+}
+.room-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    margin-bottom: 10px;
+    background: #f0fdf4;
+    border-radius: 10px;
+    font-weight: 500;
+}
+.badge-room {
+    background: linear-gradient(90deg, #059669, #047857);
+    color: white;
+    padding: 5px 12px;
+    border-radius: 50px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
+    // BAR CHART
     const ctx = document.getElementById('dashboardChart');
     new Chart(ctx, {
         type: 'bar',
@@ -47,10 +185,45 @@
             datasets: [{
                 label: 'Visitors',
                 data: {{ data | tojson }},
-                backgroundColor: '#0d6efd'
+                backgroundColor: 'rgba(5, 150, 105, 0.8)',
+                borderColor: 'rgba(4, 120, 87, 1)',
+                borderWidth: 1,
+                borderRadius: 8
             }]
         },
-        options: { responsive: true, scales: { y: { beginAtZero: true } } }
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: true,
+            scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } },
+            plugins: { legend: { display: false } }
+        }
+    });
+
+    // PIE CHART
+    const ctxPie = document.getElementById('purposeChart');
+    new Chart(ctxPie, {
+        type: 'pie',
+        data: {
+            labels: {{ purpose_labels | tojson }},
+            datasets: [{
+                data: {{ purpose_counts | tojson }},
+                backgroundColor: [
+                    '#059669', // Green
+                    '#3b82f6', // Blue  
+                    '#f59e0b', // Orange
+                    '#ec4899', // Pink
+                    '#8b5cf6'  // Purple
+                ],
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'bottom' }
+            }
+        }
     });
 </script>
 {% endblock %}

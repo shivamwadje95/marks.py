@@ -90,6 +90,18 @@ def dashboard():
         data.append(get_day_count(conn, day))
 
     top_rooms = conn.execute("SELECT room_number, COUNT(*) as c FROM visitors GROUP BY room_number ORDER BY c DESC LIMIT 5").fetchall()
+
+    # NEW: PURPOSE DATA FOR PIE CHART
+    purpose_data = conn.execute('''
+        SELECT purpose, COUNT(*) as count
+        FROM visitors
+        GROUP BY purpose
+        ORDER BY count DESC
+    ''').fetchall()
+
+    purpose_labels = [row['purpose'] for row in purpose_data]
+    purpose_counts = [row['count'] for row in purpose_data]
+
     conn.close()
 
     return render_template('dashboard.html',
@@ -97,7 +109,9 @@ def dashboard():
                            inside_count=inside_count,
                            checkout_count=checkout_count,
                            labels=labels, data=data,
-                           top_rooms=top_rooms)
+                           top_rooms=top_rooms,
+                           purpose_labels=purpose_labels,
+                           purpose_counts=purpose_counts)
 
 @app.route('/records')
 def records():
@@ -280,24 +294,32 @@ def checkout_visitor(id):
     conn.close()
     return redirect(url_for('records'))
 
+@app.route('/pass/<int:id>')
+def print_pass(id):
+    if session.get('role')!= 'admin':
+        flash('Only admin can print passes', 'danger')
+        return redirect(url_for('login'))
+    conn = get_db()
+    visitor = conn.execute('SELECT * FROM visitors WHERE id =?', (id,)).fetchone()
+    conn.close()
+    if visitor is None:
+        flash('Visitor not found', 'danger')
+        return redirect(url_for('records'))
+    return render_template('pass.html', v=visitor)
+
 @app.route('/filter')
 def filter_page():
-    # Pagination add kiya
     page = request.args.get('page', 1, type=int)
     per_page = 10
     offset = (page - 1) * per_page
-
     room = request.args.get('room', '')
     purpose = request.args.get('purpose', '')
     status = request.args.get('status', '')
-
     conn = get_db()
-
     query = "SELECT * FROM visitors WHERE 1=1"
     count_query = "SELECT COUNT(*) FROM visitors WHERE 1=1"
     params = []
     count_params = []
-
     if room:
         query += " AND room_number =?"
         count_query += " AND room_number =?"
@@ -313,18 +335,14 @@ def filter_page():
         count_query += " AND status =?"
         params.append(status)
         count_params.append(status)
-
     query += " ORDER BY in_time DESC LIMIT? OFFSET?"
     params.extend([per_page, offset])
-
     visitors = conn.execute(query, params).fetchall()
     total = conn.execute(count_query, count_params).fetchone()[0]
     total_pages = math.ceil(total / per_page) if total > 0 else 1
-
     rooms = conn.execute('SELECT DISTINCT room_number FROM visitors ORDER BY room_number').fetchall()
     purposes = conn.execute('SELECT DISTINCT purpose FROM visitors ORDER BY purpose').fetchall()
     conn.close()
-
     return render_template('filter.html', visitors=visitors, rooms=rooms, purposes=purposes,
                            selected_room=room, selected_purpose=purpose, selected_status=status,
                            page=page, total_pages=total_pages)
@@ -352,7 +370,7 @@ def search():
     total_pages = math.ceil(total / per_page) if total > 0 else 1
     inside_count = conn.execute("SELECT COUNT(*) FROM visitors WHERE status = 'Inside'").fetchone()[0]
     checkout_count = total - inside_count
-    rooms = conn.execute("SELECT DISTINCT room_number FROM visitors ORDER BY room_number").fetchall()
+    rooms = conn.execute("SELECT DISTINCT room_number FROM visitors ORDER by room_number").fetchall()
     conn.close()
     return render_template('records.html', visitors=visitors, page=page, total_pages=total_pages, q=q, room=None, status=None, total_count=total, inside_count=inside_count, checkout_count=checkout_count, rooms=rooms)
 
