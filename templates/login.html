@@ -1,20 +1,105 @@
 {% extends 'base.html' %}
+{% block title %}Login — Hostel Visitor Log{% endblock %}
+
 {% block content %}
-<div class ="row justify-content-center">
-    <div class="col-md-5">
-        <div class="card shadow-sm">
-            <div class="card-body p-4">
-                <h4 class="fw-bold mb-3">Login</h4>
-                <form method="POST" action="{{url_for('login')}}">
-                    <input type="text" name="username" class="form-control mb-2" placeholder="Username"> 
-                    <input type="password" name="password" class="form-control mb-2" placeholder="Password">
-                    <button type="submit" class="btn btn-dark">Login</button>
-                </form>
-                <p class="text-center mt-3 mb-0">
-                    No account? <a href="{{ url_for('register') }}">Register here</a>
-                </p>
+<div class="d-flex justify-content-center align-items-center" style="min-height: 75vh;">
+    <div class="col-md-6 col-lg-4">
+        <div class="login-card-dark">
+            <div class="text-center mb-4">
+                <div class="icon-glow">
+                    <i class="bi bi-shield-lock"></i>
+                </div>
+                <h3 class="fw-bold mt-3 text-white">Welcome To the Hostel Visitor Log</h3>
             </div>
+
+            <form method="POST" action="{{url_for('login')}}">
+                <div class="mb-3">
+                    <label class="form-label text-white-50 fw-semibold">Username</label>
+                    <div class="input-group">
+                        <span class="input-group-text-dark"><i class="bi bi-person"></i></span>
+                        <input type="text" name="username" class="form-control-dark" placeholder="Enter Username" required> 
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="form-label text-white-50 fw-semibold">Password</label>
+                    <div class="input-group">
+                        <span class="input-group-text-dark"><i class="bi bi-key"></i></span>
+                        <input type="password" name="password" class="form-control-dark" placeholder="Enter Password" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-gradient w-100 mb-3">
+                    <i class="bi bi-box-arrow-in-right"></i> Login
+                </button>
+            </form>
+            
+            <p class="text-center mt-3 mb-0 text-white-50">
+                No account? <a href="{{ url_for('register') }}" style="color: #a78bfa; font-weight: 600;">Register here</a>
+            </p>
         </div>
     </div>
 </div>
+
+<style>
+.login-card-dark {
+    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%); 
+    padding: 2.5rem;
+    border-radius: 24px;
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+}
+.icon-glow {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #8b5cf6, #ec4899);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    font-size: 2.5rem;
+    color: white;
+    box-shadow: 0 0 30px rgba(139, 92, 246, 0.6);
+}
+.input-group-text-dark {
+    background: rgba(139, 92, 246, 0.2);
+    border: 1px solid rgba(167, 139, 250, 0.3);
+    color: #a78bfa;
+    border-radius: 12px 0 0 12px;
+    padding: 0.9rem 1rem;
+}
+.form-control-dark {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(167, 139, 250, 0.3);
+    color: white;
+    padding: 0.9rem 1rem;
+    font-size: 1.1rem;
+    border-radius: 0 12px 12px 0;
+    width: 100%;
+}
+.form-control-dark::placeholder { color: rgba(255,255,255,0.5); }
+.form-control-dark:focus {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: #8b5cf6;
+    box-shadow: 0 0 0 0.2rem rgba(139, 92, 246, 0.25);
+    outline: none;
+    color: white;
+}
+.btn-gradient {
+    background: linear-gradient(90deg, #8b5cf6, #ec4899);
+    color: white;
+    font-weight: 700;
+    padding: 0.9rem;
+    font-size: 1.1rem;
+    border-radius: 14px;
+    border: none;
+    transition: all 0.3s ease;
+}
+.btn-gradient:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(139, 92, 246, 0.5);
+    color: white;
+}
+</style>
 {% endblock %}

@@ -3,184 +3,244 @@
 {% block title %}All Records{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-2">
-    <div>
-        <h2 class="mb-0">All Visitor Records</h2>
-        <p class="text-muted mb-0">Page {{ page }} of {{ total_pages }} | Complete visitor records and status</p>
-    </div>
-    <div class="d-flex gap-2">
-        <a href="{{ url_for('export_csv') }}" class="btn btn-brand">
-            <i class="bi bi-download"></i> Export CSV
-        </a>
-        <a href="{{ url_for('add_visitor') }}" class="btn btn-brand">
-            <i class="bi bi-plus-lg"></i> Add New
-        </a>
-    </div>
-</div>
-
-<div class="d-flex justify-content-end mb-3">
-    <span class="badge bg-dark fs-6" id="recordBadge">{{ total_count }} Records</span>
-</div>
-
-<!-- Flash messages -->
-{% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-        {% for category, message in messages %}
-            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        {% endfor %}
-    {% endif %}
-{% endwith %}
-
-<!-- SEARCH + FILTER FORM -->
-<form method="GET" action="{{ url_for('records') }}" class="card shadow-sm mb-4">
-    <div class="card-body">
-        <div class="row g-2">
-            <div class="col-md-4">
-                <div class="input-group input-group-lg">
-                    <span class="input-group-text bg-white border-end-0">
-                        <i class="bi bi-search text-muted"></i>
-                    </span>
-                    <input type="text" name="q" value="{{ q or '' }}" class="form-control border-start-0 ps-0"
-                           placeholder="Search by visitor name...">
-                </div>
-            </div>
-            <div class="col-md-2">
-                <select name="room" class="form-select">
-                    <option value="">All Rooms</option>
-                    {% for r in rooms %}
-                    <option value="{{ r['room_number'] }}" {% if room == r['room_number'] %}selected{% endif %}>{{ r['room_number'] }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="col-md-2">
-                <select name="status" class="form-select">
-                    <option value="">All Status</option>
-                    <option value="Inside" {% if status == 'Inside' %}selected{% endif %}>Inside</option>
-                    <option value="Left" {% if status == 'Left' %}selected{% endif %}>Left</option>
-                </select>
-            </div>
-            <div class="col-md-2">
-                <button class="btn btn-primary w-100 h-100">Filter</button>
-            </div>
-            <div class="col-md-2">
-                <a href="{{ url_for('records') }}" class="btn btn-outline-secondary w-100 h-100">Reset</a>
-            </div>
+<div class="container-fluid py-3">
+    
+    <!-- HEADER - DARK -->
+    <div class="header-dark d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h2 class="mb-0 fw-bold">All Visitor Records</h2>
+            <p class="mb-0 text-white-50">Page {{ page }} of {{ total_pages }} | Complete visitor records and status</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('export_csv') }}" class="btn btn-sm btn-gradient-green">
+                <i class="bi bi-download"></i> Export CSV
+            </a>
+            <a href="{{ url_for('add_visitor') }}" class="btn btn-sm btn-gradient-purple">
+                <i class="bi bi-plus-lg"></i> Add New
+            </a>
         </div>
     </div>
-</form>
 
-<!-- Status Badges -->
-<div class="d-flex gap-2 mb-3">
-    <span class="badge bg-success"><i class="bi bi-circle-fill"></i> Inside: {{ inside_count }}</span>
-    <span class="badge bg-secondary"><i class="bi bi-circle-fill"></i> Left: {{ checkout_count }}</span>
-</div>
+    <div class="d-flex justify-content-end mb-3">
+        <span class="badge-record">{{ total_count }} Records</span>
+    </div>
 
-<div class="table-responsive">
-    <table class="table table-hover table-bordered shadow-sm">
-        <thead class="table-dark">
-            <tr>
-                <th>#</th>
-                <th>Visiting</th>
-                <th style="white-space: nowrap;">Contact No</th>  
-                <th>Room</th>
-                <th>Purpose</th>
-                <th style="white-space: nowrap;">In Time</th>      
-                <th style="white-space: nowrap;">Out Time</th>     
-                <th style="white-space: nowrap;">Time Spent</th>   
-                <th>Status</th>
-                <th width="420px" class="text-center">Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for visitor in visitors %}
-            <tr>
-                <td>{{ (page - 1) * 10 + loop.index }}</td>
-                <td class="visitor-name">
-                    <div class="d-flex align-items-center">
-                        <a href="{{ url_for('details', id=visitor.id) }}">
-                            <img src="{{ url_for('static', filename='uploads/' + visitor.photo) }}"
-                                 class="rounded-circle me-2"
-                                 width="40" height="40"
-                                 style="object-fit:cover; cursor:pointer;">
-                        </a>
-                        {{ visitor.visitor_name }}
-                    </div>
-                </td>
-                <td>{{ visitor.contact_no or '-' }}</td> 
-                <td>{{ visitor.room_number }}</td>
-                <td>{{ visitor.purpose }}</td>
-                <td>{{ visitor.in_time }}</td>
-                <td>{{ visitor.out_time or 'Still Inside' }}</td>
-                <td><b>{{ visitor.time_spent or '-' }}</b></td> 
-                <td>
-                    <span class="badge {% if visitor.status == 'Inside' %}bg-success{% else %}bg-secondary{% endif %}">
-                        {{ visitor.status }}
-                    </span>
-                </td>
-                <td class="text-center" style="white-space: nowrap;">
-                    <a href="{{ url_for('details', id=visitor.id) }}"
-                       class="btn btn-sm btn-info me-1">
-                        <i class="bi bi-eye"></i> View
-                    </a>
-
-                    
-                    <a href="{{ url_for('print_pass', id=visitor.id) }}" target="_blank"
-                       class="btn btn-sm btn-primary me-1">
-                        <i class="bi bi-printer"></i> Print
-                    </a>
-
-                    
-                    <a href="{{ url_for('edit_visitor', id=visitor.id) }}"
-                       class="btn btn-sm btn-warning me-1">
-                        <i class="bi bi-pencil"></i> Edit
-                    </a>
-
-                    {% if visitor.status == 'Inside' %}
-                    <form action="{{ url_for('checkout_visitor', id=visitor.id) }}" method="POST" style="display:inline;">
-                        <button type="submit" class="btn btn-sm btn-success me-1"
-                                onclick="return confirm('Checkout {{ visitor.visitor_name }}?')">
-                            <i class="bi bi-box-arrow-right"></i> Checkout
-                        </button>
-                    </form>
-                    {% endif %}
-
-                    
-                    <form action="{{ url_for('delete_visitor', id=visitor.id) }}" method="POST" style="display:inline;">
-                        <button type="submit" class="btn btn-sm btn-danger"
-                                onclick="return confirm('Delete {{ visitor.visitor_name }}? This cannot be undone.')">
-                            <i class="bi bi-trash"></i> Delete
-                        </button>
-                    </form>
-                </td>
-            </tr>
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+                </div>
             {% endfor %}
-        </tbody>
-    </table>
+        {% endif %}
+    {% endwith %}
+
+    <!-- SEARCH + FILTER FORM -  -->
+    <form method="GET" action="{{ url_for('records') }}" class="filter-dark mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label-white">Search</label>
+                    <div class="input-group">
+                        <span class="input-group-text-dark">
+                            <i class="bi bi-search"></i>
+                        </span>
+                        <input type="text" name="q" value="{{ q or '' }}" class="form-control-dark"
+                               placeholder="Search by visitor name...">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label-white">Room</label>
+                    <select name="room" class="form-control-dark">
+                        <option value="">All Rooms</option>
+                        {% for r in rooms %}
+                        <option value="{{ r['room_number'] }}" {% if room == r['room_number'] %}selected{% endif %}>{{ r['room_number'] }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label-white">Status</label>
+                    <select name="status" class="form-control-dark">
+                        <option value="">All Status</option>
+                        <option value="Inside" {% if status == 'Inside' %}selected{% endif %}>Inside</option>
+                        <option value="Left" {% if status == 'Left' %}selected{% endif %}>Left</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button class="btn btn-gradient-purple w-100 h-100">Filter</button>
+                </div>
+                <div class="col-md-2">
+                    <a href="{{ url_for('records') }}" class="btn btn-outline-light w-100 h-100">Reset</a>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <!-- Status Badges -->
+    <div class="d-flex gap-2 mb-3">
+        <span class="badge bg-success"><i class="bi bi-circle-fill"></i> Inside: {{ inside_count }}</span>
+        <span class="badge bg-secondary"><i class="bi bi-circle-fill"></i> Left: {{ checkout_count }}</span>
+    </div>
+
+    
+    <div class="table-responsive">
+        <table class="table table-hover table-bordered shadow-sm">
+            <thead class="table-dark">
+                <tr>
+                    <th>#</th>
+                    <th>Visiting</th>
+                    <th style="white-space: nowrap;">Contact No</th>  
+                    <th>Room</th>
+                    <th>Purpose</th>
+                    <th style="white-space: nowrap;">In Time</th>      
+                    <th style="white-space: nowrap;">Out Time</th>     
+                    <th style="white-space: nowrap;">Time Spent</th>   
+                    <th>Status</th>
+                    <th width="420px" class="text-center">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for visitor in visitors %}
+                <tr>
+                    <td>{{ (page - 1) * 10 + loop.index }}</td>
+                    <td class="visitor-name">
+                        <div class="d-flex align-items-center">
+                            <a href="{{ url_for('details', id=visitor.id) }}">
+                                <img src="{{ url_for('static', filename='uploads/' + visitor.photo) }}"
+                                     class="rounded-circle me-2"
+                                     width="40" height="40"
+                                     style="object-fit:cover; cursor:pointer;">
+                            </a>
+                            {{ visitor.visitor_name }}
+                        </div>
+                    </td>
+                    <td>{{ visitor.contact_no or '-' }}</td> 
+                    <td>{{ visitor.room_number }}</td>
+                    <td>{{ visitor.purpose }}</td>
+                    <td>{{ visitor.in_time }}</td>
+                    <td>{{ visitor.out_time or 'Still Inside' }}</td>
+                    <td><b>{{ visitor.time_spent or '-' }}</b></td> 
+                    <td>
+                        <span class="badge {% if visitor.status == 'Inside' %}bg-success{% else %}bg-secondary{% endif %}">
+                            {{ visitor.status }}
+                        </span>
+                    </td>
+                    <td class="text-center" style="white-space: nowrap;">
+                        <a href="{{ url_for('details', id=visitor.id) }}" class="btn btn-sm btn-info me-1"><i class="bi bi-eye"></i> View</a>
+                        <a href="{{ url_for('print_pass', id=visitor.id) }}" target="_blank" class="btn btn-sm btn-primary me-1"><i class="bi bi-printer"></i> Print</a>
+                        <a href="{{ url_for('edit_visitor', id=visitor.id) }}" class="btn btn-sm btn-warning me-1"><i class="bi bi-pencil"></i> Edit</a>
+                        {% if visitor.status == 'Inside' %}
+                        <form action="{{ url_for('checkout_visitor', id=visitor.id) }}" method="POST" style="display:inline;">
+                            <button type="submit" class="btn btn-sm btn-success me-1" onclick="return confirm('Checkout {{ visitor.visitor_name }}?')"><i class="bi bi-box-arrow-right"></i> Checkout</button>
+                        </form>
+                        {% endif %}
+                        <form action="{{ url_for('delete_visitor', id=visitor.id) }}" method="POST" style="display:inline;">
+                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Delete {{ visitor.visitor_name }}?')"><i class="bi bi-trash"></i> Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if not visitors %}
+    <div class="alert alert-info mt-4" role="alert">
+        No records found for this page or filter.
+    </div>
+    {% endif %}
+
+    <!-- PAGINATION -->
+    <div class="pagination d-flex justify-content-center align-items-center gap-2 mt-4 flex-wrap">
+      {% if page > 1 %}
+        <a href="{{ url_for('records', page=page-1, room=room, status=status, q=q) }}" class="btn btn-outline-primary">« Prev</a>
+      {% endif %}
+
+      {% for p in range(1, total_pages + 1) %}
+        <a href="{{ url_for('records', page=p, room=room, status=status, q=q) }}"
+           class="btn {% if p == page %}btn-primary{% else %}btn-outline-primary{% endif %}">{{ p }}</a>
+      {% endfor %}
+
+      {% if page < total_pages %}
+        <a href="{{ url_for('records', page=page+1, room=room, status=status, q=q) }}" class="btn btn-outline-primary">Next »</a>
+      {% endif %}
+    </div>
+
 </div>
 
-{% if not visitors %}
-<div class="alert alert-info mt-4" role="alert">
-    No records found for this page or filter.
-</div>
-{% endif %}
+<style>
 
-<!-- PAGINATION -->
-<div class="pagination d-flex justify-content-center align-items-center gap-2 mt-4 flex-wrap">
-  {% if page > 1 %}
-    <a href="{{ url_for('records', page=page-1, room=room, status=status, q=q) }}" class="btn btn-outline-primary">« Prev</a>
-  {% endif %}
+.header-dark {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    padding: 1.5rem;
+    border-radius: 20px;
+    border: 1px solid rgba(139, 92, 246, 0.3);
+}
+.header-dark h2, .header-dark p {
+    color: white !important;
+}
 
-  {% for p in range(1, total_pages + 1) %}
-    <a href="{{ url_for('records', page=p, room=room, status=status, q=q) }}"
-       class="btn {% if p == page %}btn-primary{% else %}btn-outline-primary{% endif %}">{{ p }}</a>
-  {% endfor %}
+.filter-dark {
+    background: #1e293b;
+    padding: 1.5rem;
+    border-radius: 20px;
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+}
 
-  {% if page < total_pages %}
-    <a href="{{ url_for('records', page=page+1, room=room, status=status, q=q) }}" class="btn btn-outline-primary">Next »</a>
-  {% endif %}
-</div>
+.form-label-white { 
+    color: #f8fafc; 
+    font-weight: 700; 
+    margin-bottom: 0.5rem; 
+    display: block;
+}
 
+.input-group-text-dark {
+    background: #334155;
+    border: 1px solid #475569;
+    color: #f8fafc;
+}
+
+.form-control-dark {
+    background: #334155; 
+    border: 1px solid #475569;
+    color: #ffffff; 
+    font-weight: 600;
+}
+.form-control-dark::placeholder { 
+    color: #94a3b8; 
+    opacity: 1;
+}
+.form-control-dark:focus {
+    background: #475569;
+    border-color: #8b5cf6;
+    box-shadow: 0 0 0 0.2rem rgba(139, 92, 246, 0.4);
+    color: white;
+}
+
+.badge-record {
+    background: rgba(139, 92, 246, 0.2);
+    color: #a78bfa;
+    border: 1px solid #8b5cf6;
+    padding: 0.5rem 1rem;
+    border-radius: 50px;
+    font-weight: 700;
+}
+
+/* BUTTONS */
+.btn-gradient-purple {
+    background: linear-gradient(90deg, #8b5cf6, #ec4899);
+    color: white;
+    font-weight: 700;
+    border: none;
+}
+.btn-gradient-green {
+    background: linear-gradient(90deg, #10b981, #06b6d4);
+    color: white;
+    font-weight: 700;
+    border: none;
+}
+</style>
 {% endblock %}

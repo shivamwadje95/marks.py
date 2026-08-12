@@ -4,8 +4,9 @@
 <div class="row justify-content-center">
     <div class="col-md-6">
 
-        <div class="card shadow-sm">
-            <div class="card-header py-3" style="background-color: #4e73df;">
+        <div class="card shadow-lg edit-card">
+            <!-- TOP HEADER - DARK ROUNDED -->
+            <div class="card-header py-3 edit-header-dark">
                 <h5 class="mb-0 text-white">
                     <i class="fa fa-edit"></i> Edit Visitor
                 </h5>
@@ -13,56 +14,56 @@
 
             <div class="card-body p-4">
                 <!-- Current values info -->
-                <div class="alert alert-info py-2 mb-4">
+                <div class="alert alert-info py-2 mb-4" style="background: rgba(59,130,246,0.1); border:1px solid rgba(59,130,246,0.2);">
                     <small>
                         <strong>Editing: </strong>
                         {{ visitor.visiting }} - Room {{ visitor.room }}
                     </small>
                 </div>
 
-                <form method="POST" action="{{ url_for('edit_visitor', id=visitor.id) }}" enctype="multipart/form-data"> <!-- CHANGE: enctype add -->
+                <form method="POST" action="{{ url_for('edit_visitor', id=visitor.id) }}" enctype="multipart/form-data">
                     
                     <!-- PHOTO PREVIEW + UPLOAD -->
                     <div class="text-center mb-3">
                         <img src="{{ url_for('static', filename='uploads/' + visitor.photo) }}" 
-                             class="rounded-circle mb-2 border" width="90" height="90" style="object-fit:cover;">
+                             class="rounded-circle mb-2 border" width="90" height="90" style="object-fit:cover; border: 3px solid #8b5cf6 !important;">
                         <div class="form-text">Current Photo</div>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Visiting</label>
+                        <label class="form-label fw-bold">Visiting</label>
                         <input type="text" class="form-control" name="visiting" 
                                value="{{ visitor.visiting }}" required>
                     </div>
 
                     <!-- NEW CONTACT NO -->
                     <div class="mb-3">
-                        <label class="form-label">Contact No</label>
+                        <label class="form-label fw-bold">Contact No</label>
                         <input type="tel" class="form-control" name="contact_no" 
                                value="{{ visitor.contact_no }}" required>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Room</label>
+                        <label class="form-label fw-bold">Room</label>
                         <input type="text" class="form-control" name="room" 
                                value="{{ visitor.room }}" required>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Purpose</label>
+                        <label class="form-label fw-bold">Purpose</label>
                         <input type="text" class="form-control" name="purpose" 
                                value="{{ visitor.purpose }}" required>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">In Time</label>
+                        <label class="form-label fw-bold">In Time</label>
                         <input type="text" class="form-control" name="in_time" 
                                value="{{ visitor.in_time }}" readonly>
                     </div>
 
                     <!-- NEW TIME SPENT -->
                     <div class="mb-3">
-                        <label class="form-label">Time Spent</label>
+                        <label class="form-label fw-bold">Time Spent</label>
                         <input type="text" class="form-control" name="time_spent" 
                                value="{{ visitor.time_spent or '-' }}" readonly>
                         <div class="form-text">Ye auto calculate hota hai Checkout ke baad</div>
@@ -76,18 +77,19 @@
                     </div>
 
                     <div class="mb-4">
-                        <label class="form-label">Status</label>
+                        <label class="form-label fw-bold">Status</label>
                         <select class="form-select" name="status" required>
                             <option value="Inside" {% if visitor.status == 'Inside' %}selected{% endif %}>Inside</option>
                             <option value="Left" {% if visitor.status == 'Left' %}selected{% endif %}>Left</option>
                         </select>
                     </div>
 
-                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <!-- BOTTOM BUTTONS - DARK FOOTER -->
+                    <div class="edit-footer-dark">
                         <a href="{{ url_for('records') }}" class="btn btn-secondary me-md-2">
                             <i class="fa fa-times"></i> Cancel
                         </a>
-                        <button type="submit" class="btn btn-primary">
+                        <button type="submit" class="btn btn-gradient-green">
                             <i class="fa fa-save"></i> Update Visitor
                         </button>
                     </div>
@@ -98,4 +100,52 @@
 
     </div>
 </div>
+
+<style>
+.edit-card {
+    border-radius: 20px;
+    border: 1px solid rgba(0,0,0,0.05);
+    overflow: hidden; 
+}
+
+/* TOP HEADER DARK */
+.edit-header-dark {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important;
+    border-radius: 20px 20px 0 0;
+    border-bottom: 1px solid rgba(139, 92, 246, 0.3);
+}
+
+/* BOTTOM FOOTER DARK */
+.edit-footer-dark {
+    background: #334155;
+    padding: 1rem 1.5rem;
+    margin: 1.5rem -1.5rem -1.5rem -1.5rem; /* card-body ke border se chipkane ke liye */
+    border-radius: 0 0 20px 20px;
+    border-top: 1px solid rgba(139, 92, 246, 0.2);
+    display: flex;
+    justify-content: flex-end;
+}
+
+/* INPUTS */
+.form-control, .form-select {
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+}
+.form-control:focus, .form-select:focus {
+    border-color: #8b5cf6;
+    box-shadow: 0 0 0 0.2rem rgba(139, 92, 246, 0.25);
+}
+
+/* BUTTON */
+.btn-gradient-green {
+    background: linear-gradient(90deg, #10b981, #06b6d4);
+    color: white;
+    font-weight: 700;
+    border: none;
+}
+.btn-gradient-green:hover {
+    background: linear-gradient(90deg, #059669, #0891b2);
+    color: white;
+}
+</style>
 {% endblock %}

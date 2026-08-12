@@ -2,137 +2,200 @@
 {% block title %}Home — Hostel Visitor Log{% endblock %}
 
 {% block content %}
+<div class="container-fluid py-4">
 
-<!-- Hero Section -->
-<div class="hero-section p-5 mb-4">
-    <div class="row align-items-center">
-        <div class="col-md-8">
-            <h1 class="display-5 fw-bold mb-2">
-                Hostel Visitor Log 🏠
-            </h1>
-            <p class="fs-5 opacity-75 mb-3">
-                Track and manage all hostel visitors in real-time.
-            </p>
-            <a href="{{ url_for('records') }}"
-               class="btn btn-light btn-lg px-4 me-2">
-                View Records →
-            </a>
-            <a href="{{ url_for('add_visitor') }}"
-               class="btn btn-outline-light btn-lg px-4">
-                Add Visitor
-            </a>
-        </div>
-        <div class="col-12 col-md-4 text-center d-none d-md-block">
-            <span style="font-size: 120px;">🏨</span>
+    <!-- Hero Section DARK CARD -->
+    <div class="hero-dark p-5 mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="display-5 fw-bold mb-2 text-white">
+                    Hostel Visitor Log 🏠
+                </h1>
+                <p class="fs-5 text-white-50 mb-3">
+                    Track and manage all hostel visitors in real-time.
+                </p>
+                <a href="{{ url_for('records') }}" class="btn btn-gradient-green btn-lg px-4 me-2">
+                    View Records →
+                </a>
+                <a href="{{ url_for('add_visitor') }}" class="btn btn-gradient-purple btn-lg px-4">
+                    Add Visitor
+                </a>
+            </div>
+            <div class="col-12 col-md-4 text-center d-none d-md-block">
+                <span style="font-size: 120px;">🏨</span>
+            </div>
         </div>
     </div>
-</div>
 
-<!-- Stats Row -->
-<div class="row mb-4">
-    <div class="col-12 col-md-4 mb-3">
-        <div class="card stat-card p-3 bg-primary bg-opacity-10">
-            <div class="d-flex align-items-center">
-                <span style="font-size:40px;">👥</span>
-                <div class="ms-3">
-                    <h2 class="fw-bold text-primary mb-0">{{ total_count }}</h2>
-                    <p class="text-muted mb-0">Total Visitors</p>
+    <!-- Stats Row LIGHT -->
+    <div class="row mb-4">
+        <div class="col-12 col-md-4 mb-3">
+            <div class="card stat-card p-3 bg-primary bg-opacity-10">
+                <div class="d-flex align-items-center">
+                    <span style="font-size:40px;">👥</span>
+                    <div class="ms-3">
+                        <h2 class="fw-bold text-primary mb-0">{{ total_count }}</h2>
+                        <p class="text-muted mb-0">Total Visitors</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-4 mb-3">
+            <div class="card stat-card p-3 bg-success bg-opacity-10">
+                <div class="d-flex align-items-center">
+                    <span style="font-size:40px;">✅</span>
+                    <div class="ms-3">
+                        <h2 class="fw-bold text-success mb-0">{{ inside_count }}</h2>
+                        <p class="text-muted mb-0">Currently Inside</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-4 mb-3">
+            <div class="card stat-card p-3 bg-secondary bg-opacity-10">
+                <div class="d-flex align-items-center">
+                    <span style="font-size:40px;">🚪</span>
+                    <div class="ms-3">
+                        <h2 class="fw-bold text-secondary mb-0">{{ checkout_count }}</h2>
+                        <p class="text-muted mb-0">Checked Out</p>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="col-12 col-md-4 mb-3">
-        <div class="card stat-card p-3 bg-success bg-opacity-10">
-            <div class="d-flex align-items-center">
-                <span style="font-size:40px;">✅</span>
-                <div class="ms-3">
-                    <h2 class="fw-bold text-success mb-0">{{ inside_count }}</h2>
-                    <p class="text-muted mb-0">Currently Inside</p>
+    <!-- 7 DAYS CHART - DARK -->
+    <div class="chart-card-dark mb-4">
+        <div class="card-header-dark d-flex justify-content-between align-items-center">
+            <h5 class="fw-bold mb-0 text-white">📊 7 Days Visitor Trend</h5>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-sm btn-gradient-purple">View Full Dashboard →</a>
+        </div>
+        <div class="card-body">
+            <canvas id="visitorChart" height="80"></canvas>
+        </div>
+    </div>
+
+    <!-- Section heading -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="fw-bold mb-0">Recent 5 Visitors</h4>
+        <a href="{{ url_for('records') }}" class="btn btn-sm btn-outline-primary">
+            View All →
+        </a>
+    </div>
+
+    <!-- Visitor Cards COLOURFUL FAINT - FIXED -->
+    <div class="row">
+        {% for visitor in visitors %}
+        <div class="col-12 col-md-6 col-lg-3 mb-3">
+            <div class="card student-card-faint color-{{ loop.index }} h-100">
+                <div class="card-header-faint">
+                    <small class="fw-bold">Room: {{ visitor['room_number'] }}</small>
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title fw-bold">{{ visitor['visitor_name'] }}</h5>
+                    <p class="card-text text-muted small mb-1">
+                        <strong>Visiting:</strong> {{ visitor['student_name'] }}
+                    </p>
+                    <p class="card-text text-muted small mb-1">
+                        <strong>Purpose:</strong> {{ visitor['purpose'] }}
+                    </p>
+                    <p class="card-text text-muted small mb-2">
+                        <strong>In Time:</strong> {{ visitor['in_time'] }}
+                    </p>
+                    {% if visitor['status'] == 'Inside' %}
+                        <span class="badge bg-success">🟢 Inside</span>
+                    {% else %}
+                        <span class="badge bg-secondary">⚪ Checked Out</span>
+                    {% endif %}
+                </div>
+                <div class="card-footer bg-transparent">
+                    <a href="{{ url_for('details', id=visitor['id']) }}" class="btn btn-sm btn-outline-primary w-100">View Details</a>
                 </div>
             </div>
         </div>
+        {% endfor %}
     </div>
 
-    <div class="col-12 col-md-4 mb-3">
-        <div class="card stat-card p-3 bg-secondary bg-opacity-10">
-            <div class="d-flex align-items-center">
-                <span style="font-size:40px;">🚪</span>
-                <div class="ms-3">
-                    <h2 class="fw-bold text-secondary mb-0">{{ checkout_count }}</h2>
-                    <p class="text-muted mb-0">Checked Out</p>
-                </div>
-            </div>
-        </div>
+    {% if not visitors %}
+    <div class="alert alert-info mt-4" role="alert">
+        No visitors found.
     </div>
+    {% endif %}
+
 </div>
 
-<!-- 7 DAYS CHART - NEW SECTION -->
-<div class="card mb-4">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="fw-bold mb-0">📊 7 Days Visitor Trend</h5>
-        <!-- YE BUTTON FULL DASHBOARD PE LE JAYEGA -->
-        <a href="{{ url_for('dashboard') }}" class="btn btn-sm btn-brand">View Full Dashboard →</a>
-    </div>
-    <div class="card-body">
-        <canvas id="visitorChart" height="80"></canvas>
-    </div>
-</div>
+<style>
+/* HERO DARK CARD */
+.hero-dark {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    border-radius: 20px;
+    border: 1px solid rgba(139, 92, 246, 0.3);
+}
 
-<!-- Section heading  -->
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h4 class="fw-bold mb-0">Recent 5 Visitors</h4>
-    <a href="{{ url_for('records') }}"
-       class="btn btn-sm btn-outline-primary">
-        View All →
-    </a>
-</div>
+/* CHART CARD DARK */
+.chart-card-dark {
+    background: #1e293b;
+    border-radius: 20px;
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+}
+.card-header-dark {
+    background: #334155;
+    padding: 1rem 1.5rem;
+    border-radius: 20px 20px 0 0;
+    border-bottom: 1px solid rgba(139, 92, 246, 0.3);
+}
 
-<!-- Visitor Cards -->
-<div class="row">
-    {% for visitor in visitors %}
-    <div class="col-12 col-md-6 col-lg-3 mb-3">
-        <div class="card student-card h-100">
-            <div class="card-header py-2"
-                 style="background-color: #1e3a5f; color:white;">
-                <small class="fw-bold">Room: {{ visitor['room_number'] }}</small>
-            </div>
-            <div class="card-body">
-                <h5 class="card-title fw-bold">{{ visitor['visitor_name'] }}</h5>
-                <p class="card-text text-muted small mb-1">
-                    <strong>Visiting:</strong> {{ visitor['student_name'] }}
-                </p>
-                <p class="card-text text-muted small mb-1">
-                    <strong>Purpose:</strong> {{ visitor['purpose'] }}
-                </p>
-                <p class="card-text text-muted small mb-2">
-                    <strong>In Time:</strong> {{ visitor['in_time'] }}
-                </p>
-                {% if visitor['status'] == 'Inside' %}
-                    <span class="badge bg-success">🟢 Inside</span>
-                {% else %}
-                    <span class="badge bg-secondary">⚪ Checked Out</span>
-                {% endif %}
-            </div>
-            <div class="card-footer bg-transparent">
-                <a href="{{ url_for('details', id=visitor['id']) }}"
-                   class="btn btn-sm btn-outline-primary w-100">View Details</a>
-            </div>
-        </div>
-    </div>
-    {% endfor %}
-</div>
+/* VISITOR CARDS COLOURFUL FAINT - FIXED */
+.student-card-faint {
+    border-radius: 15px;
+    border: none;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    transition: transform 0.2s;
+}
+.student-card-faint:hover {
+    transform: translateY(-5px);
+}
 
-{% if not visitors %}
-<div class="alert alert-info mt-4" role="alert">
-    No visitors found.
-</div>
-{% endif %}
 
+.color-1 { background: rgba(139, 92, 246, 0.08); } /* Purple */
+.color-2 { background: rgba(16, 185, 129, 0.08); } /* Green */
+.color-3 { background: rgba(59, 130, 246, 0.08); } /* Blue */
+.color-4 { background: rgba(236, 72, 153, 0.08); } /* Pink */
+.color-5 { background: rgba(245, 158, 11, 0.08); } /* Orange */
+
+.color-1 .card-header-faint { background: rgba(139, 92, 246, 0.15); }
+.color-2 .card-header-faint { background: rgba(16, 185, 129, 0.15); }
+.color-3 .card-header-faint { background: rgba(59, 130, 246, 0.15); }
+.color-4 .card-header-faint { background: rgba(236, 72, 153, 0.15); }
+.color-5 .card-header-faint { background: rgba(245, 158, 11, 0.15); }
+
+.card-header-faint {
+    padding: 0.7rem 1rem;
+    border-radius: 15px 15px 0 0;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+/* BUTTONS */
+.btn-gradient-purple {
+    background: linear-gradient(90deg, #8b5cf6, #ec4899);
+    color: white;
+    font-weight: 700;
+    border: none;
+}
+.btn-gradient-green {
+    background: linear-gradient(90deg, #10b981, #06b6d4);
+    color: white;
+    font-weight: 700;
+    border: none;
+}
+</style>
 {% endblock %}
 
 {% block scripts %}
-<!-- Chart.js Script -->
+<!-- Chart.js Script DARK -->
 <script>
     const ctx = document.getElementById('visitorChart');
     new Chart(ctx, {
@@ -142,15 +205,28 @@
             datasets: [{
                 label: 'Visitors',
                 data: {{ data | tojson }},
-                borderColor: '#0d6efd',
-                backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                borderColor: '#8b5cf6', /* PURPLE */
+                backgroundColor: 'rgba(139, 92, 246, 0.2)',
                 fill: true,
                 tension: 0.4
             }]
         },
         options: {
             responsive: true,
-            scales: { y: { beginAtZero: true } }
+            plugins: {
+                legend: { labels: { color: '#f8fafc' } }
+            },
+            scales: { 
+                y: { 
+                    beginAtZero: true,
+                    ticks: { color: '#94a3b8' },
+                    grid: { color: '#334155' }
+                },
+                x: {
+                    ticks: { color: '#94a3b8' },
+                    grid: { color: '#334155' }
+                }
+            }
         }
     });
 </script>

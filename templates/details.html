@@ -5,69 +5,63 @@
 {% block content %}
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Visitor Details - ID: {{ visitor['id'] }}</h2>
-        <a href="{{ url_for('records') }}" class="btn btn-secondary">
+        <h2 class="fw-bold">Visitor Details - ID: {{ visitor['id'] }}</h2>
+        <a href="{{ url_for('records') }}" class="btn btn-outline-secondary">
             <i class="bi bi-arrow-left"></i> Back
         </a>
     </div>
 
-    <div class="card shadow">
-        <div class="card-body">
-            <!-- PHOTO SECTION -->
-            <div class="text-center mb-4">
-                <a href="{{ url_for('static', filename='uploads/' + visitor['photo']) }}" target="_blank">
-                    <img src="{{ url_for('static', filename='uploads/' + visitor['photo']) }}" 
-                         class="rounded-circle shadow" 
-                         width="150" height="150" 
-                         style="object-fit:cover; border: 4px solid #fff; cursor:pointer;">
-                </a>
-                <h4 class="mt-3 mb-0">{{ visitor['visitor_name'] }}</h4>
-                <span class="badge {% if visitor['status'] == 'Inside' %}bg-success{% else %}bg-secondary{% endif %} fs-6">
-                    {{ visitor['status'] }}
-                </span>
-            </div>
-            <hr>
+    <div class="card shadow-lg detail-card">
+        <!-- TOP HEADER - DARK ROUNDED -->
+        <div class="detail-header-dark text-center">
+            <a href="{{ url_for('static', filename='uploads/' + visitor['photo']) }}" target="_blank">
+                <img src="{{ url_for('static', filename='uploads/' + visitor['photo']) }}" 
+                     class="rounded-circle shadow" 
+                     width="150" height="150" 
+                     style="object-fit:cover; border: 4px solid #8b5cf6; cursor:pointer;">
+            </a>
+            <h4 class="mt-3 mb-0 fw-bold text-white">{{ visitor['visitor_name'] }}</h4>
+            <span class="badge {% if visitor['status'] == 'Inside' %}bg-success{% else %}bg-secondary{% endif %} fs-6 px-3 py-2">
+                {% if visitor['status'] == 'Inside' %}🟢 Inside{% else %}⚪ Checked Out{% endif %}
+            </span>
+        </div>
 
+        <div class="card-body">
+            <!-- TABLE with FAINT COLOURS -->
             <table class="table table-borderless">
-                <tr>
+                <tr class="detail-row color-1">
                     <th width="200">Visitor Name:</th>
                     <td>{{ visitor['visitor_name'] }}</td>
                 </tr>
-
-                <!--  CONTACT NO -->
-                <tr>
+                <tr class="detail-row color-2">
                     <th>Contact No:</th>
                     <td>{{ visitor['contact_no'] }}</td>
                 </tr>
-
-                <tr>
+                <tr class="detail-row color-3">
                     <th>Visiting Student:</th>
                     <td>{{ visitor['student_name'] }}</td>
                 </tr>
-                <tr>
+                <tr class="detail-row color-4">
                     <th>Room Number:</th>
                     <td>{{ visitor['room_number'] }}</td>
                 </tr>
-                <tr>
+                <tr class="detail-row color-5">
                     <th>Purpose:</th>
                     <td>{{ visitor['purpose'] }}</td>
                 </tr>
-                <tr>
+                <tr class="detail-row color-1">
                     <th>In Time:</th>
                     <td>{{ visitor['in_time'] }}</td>
                 </tr>
-                <tr>
+                <tr class="detail-row color-2">
                     <th>Out Time:</th>
                     <td>{{ visitor['out_time'] if visitor['out_time'] else 'Not checked out yet' }}</td>
                 </tr>
-
-                <!--  TIME SPENT -->
-                <tr>
+                <tr class="detail-row color-3">
                     <th>Time Spent:</th>
                     <td>{{ visitor['time_spent'] if visitor['time_spent'] else '-' }}</td>
                 </tr>
-
-                <tr>
+                <tr class="detail-row color-4">
                     <th>Status:</th>
                     <td>
                         <span class="badge {% if visitor['status'] == 'Inside' %}bg-success{% else %}bg-secondary{% endif %}">
@@ -77,9 +71,9 @@
                 </tr>
             </table>
 
-            <!-- ===== AI TIP SECTION ===== -->
+            <!-- AI TIP SECTION -->
             <div class="mt-3">
-                <a href="{{ url_for('get_visitor_tip', id=visitor['id']) }}" class="btn btn-warning">
+                <a href="{{ url_for('get_visitor_tip', id=visitor['id']) }}" class="btn btn-gradient-orange w-100">
                     <i class="bi bi-robot"></i> Get AI Security Tip
                 </a>
             </div>
@@ -90,10 +84,12 @@
             </div>
             {% endif %}
         </div>
-        <div class="card-footer">
+
+        <!-- BOTTOM FOOTER - DARK ROUNDED -->
+        <div class="card-footer-dark">
             {% if visitor['status'] == 'Inside' %}
             <form action="{{ url_for('checkout_visitor', id=visitor['id']) }}" method="POST" style="display:inline;">
-                <button type="submit" class="btn btn-warning">
+                <button type="submit" class="btn btn-gradient-green">
                     <i class="bi bi-box-arrow-right"></i> Checkout
                 </button>
             </form>
@@ -108,4 +104,58 @@
         </div>
     </div>
 </div>
+
+<style>
+.detail-card {
+    border-radius: 20px;
+    border: 1px solid rgba(0,0,0,0.05);
+    overflow: hidden; /* Important for rounded corners */
+}
+
+/* TOP HEADER DARK */
+.detail-header-dark {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    padding: 2rem;
+    border-radius: 20px 20px 0 0;
+    border-bottom: 1px solid rgba(139, 92, 246, 0.3);
+}
+
+/* BOTTOM FOOTER DARK */
+.card-footer-dark {
+    background: #334155;
+    padding: 1rem 1.5rem;
+    border-radius: 0 0 20px 20px;
+    border-top: 1px solid rgba(139, 92, 246, 0.2);
+    display: flex;
+    gap: 10px;
+}
+
+/* FAINT COLOUR ROWS - MIDDLE LIGHT */
+.detail-row th {
+    font-weight: 600;
+    color: #475569;
+}
+.detail-row td {
+    color: #1e293b;
+}
+.color-1 { background: rgba(139, 92, 246, 0.05); } /* Faint Purple */
+.color-2 { background: rgba(16, 185, 129, 0.05); } /* Faint Green */
+.color-3 { background: rgba(59, 130, 246, 0.05); } /* Faint Blue */
+.color-4 { background: rgba(236, 72, 153, 0.05); } /* Faint Pink */
+.color-5 { background: rgba(245, 158, 11, 0.05); } /* Faint Orange */
+
+/* BUTTONS */
+.btn-gradient-green {
+    background: linear-gradient(90deg, #10b981, #06b6d4);
+    color: white;
+    font-weight: 700;
+    border: none;
+}
+.btn-gradient-orange {
+    background: linear-gradient(90deg, #f59e0b, #ef4444);
+    color: white;
+    font-weight: 700;
+    border: none;
+}
+</style>
 {% endblock %}

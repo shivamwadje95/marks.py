@@ -1,46 +1,137 @@
 {% extends 'base.html' %}
+{% block title %}Add Visitor — Hostel Visitor Log{% endblock %}
 
 {% block content %}
-<h2 class="mb-4"><i class="bi bi-person-plus"></i> Add New Visitor</h2>
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <form method="POST" enctype="multipart/form-data">
-                    <div class="mb-3">
-                        <label class="form-label">Visitor Name</label>
-                        <input type="text" class="form-control" name="visitor_name" required>
-                    </div>
-
-                    <!-- NAYA CONTACT NO FIELD -->
-                    <div class="mb-3">
-                        <label class="form-label">Contact No</label>
-                        <input type="tel" class="form-control" name="contact_no" placeholder="10 digit mobile" required>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Student to Visit</label>
-                        <input type="text" class="form-control" name="student_name" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Room Number</label>
-                        <input type="text" class="form-control" name="room_number" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Purpose</label>
-                        <input type="text" class="form-control" name="purpose" required>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Visitor Photo</label>
-                        <input type="file" name="photo" class="form-control" accept="image/*">
-                        <div class="form-text">JPG, PNG file. Khali chhodoge to default photo lagegi</div>
-                    </div>
-
-                    <button type="submit" class="btn btn-dark w-100"><i class="bi bi-check-square"></i> Submit Entry</button>
-                </form>
+<div class="d-flex justify-content-center align-items-center" style="min-height: 85vh;">
+    <div class="col-md-8 col-lg-6">
+        <div class="form-card-dark">
+            <div class="text-center mb-4">
+                <div class="icon-glow-form">
+                    <i class="bi bi-person-plus"></i>
+                </div>
+                <h3 class="fw-bold mt-3 text-white">Add New Visitor</h3>
             </div>
+
+            <form method="POST" enctype="multipart/form-data">
+                <div class="mb-3">
+                    <label class="form-label-dark">Visitor Name</label>
+                    <input type="text" class="form-control-dark" name="visitor_name" placeholder="Enter Full Name" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label-dark">Contact No</label>
+                    <input type="tel" class="form-control-dark" name="contact_no" placeholder="10 digit mobile" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label-dark">Student to Visit</label>
+                    <input type="text" class="form-control-dark" name="student_name" placeholder="Student Name" required>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label-dark">Room Number</label>
+                    <input type="text" class="form-control-dark" name="room_number" placeholder="e.g. A-101" required>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label-dark">Purpose</label>
+                    <input type="text" class="form-control-dark" name="purpose" placeholder="Meeting, Delivery, etc" required>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="form-label-dark fw-bold">Visitor Photo</label>
+                    <input type="file" name="photo" class="form-control-dark-file" accept="image/*">
+                    <div class="form-text-dark">JPG, PNG file. Khali chhodoge to default photo lagegi</div>
+                </div>
+
+                <button type="submit" class="btn btn-gradient w-100"><i class="bi bi-check-square"></i> Submit Entry</button>
+            </form>
         </div>
     </div>
 </div>
+
+<style>
+.form-card-dark {
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%); /* DARK GREY CARD */
+    padding: 2.5rem;
+    border-radius: 24px;
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+}
+.icon-glow-form {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #10b981, #06b6d4); /* GREEN TO CYAN */
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    font-size: 2.5rem;
+    color: white;
+    box-shadow: 0 0 30px rgba(16, 185, 129, 0.6);
+}
+.form-label-dark {
+    color: #cbd5e1;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+.form-control-dark {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    color: white;
+    padding: 0.9rem 1rem;
+    font-size: 1rem;
+    border-radius: 12px;
+    width: 100%;
+}
+.form-control-dark::placeholder { color: rgba(255,255,255,0.5); }
+.form-control-dark:focus {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: #8b5cf6;
+    box-shadow: 0 0 0 0.2rem rgba(139, 92, 246, 0.25);
+    outline: none;
+    color: white;
+}
+.form-control-dark-file {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    color: #cbd5e1;
+    padding: 0.7rem 1rem;
+    font-size: 1rem;
+    border-radius: 12px;
+    width: 100%;
+}
+.form-control-dark-file::file-selector-button {
+    background: linear-gradient(90deg, #8b5cf6, #ec4899);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    margin-right: 1rem;
+    cursor: pointer;
+    font-weight: 600;
+}
+.form-text-dark {
+    color: #94a3b8;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+.btn-gradient {
+    background: linear-gradient(90deg, #10b981, #06b6d4); /* GREEN BUTTON */
+    color: white;
+    font-weight: 700;
+    padding: 0.9rem;
+    font-size: 1.1rem;
+    border-radius: 14px;
+    border: none;
+    transition: all 0.3s ease;
+}
+.btn-gradient:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(16, 185, 129, 0.5);
+    color: white;
+}
+</style>
 {% endblock %}
