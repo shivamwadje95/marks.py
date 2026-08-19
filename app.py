@@ -13,6 +13,7 @@ from groq import Groq
 from dotenv import load_dotenv
 
 load_dotenv()
+client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, 'database.db')
@@ -183,31 +184,92 @@ def details(id):
 @app.route("/visitor/<int:id>/tip")
 def get_visitor_tip(id):
     conn = get_db()
-    visitor = conn.execute('SELECT * FROM visitors WHERE id =?', (id,)).fetchone()
-    conn.close()
-    if visitor is None:
-        flash('Visitor not found', 'danger')
-        return redirect(url_for('records'))
-    out_time = visitor['out_time'] if visitor['out_time'] else "Not checked out yet"
-    status = visitor['status']
-    prompt = f"""Visitor name: {visitor['visitor_name']}
-    Contact: {visitor['contact_no']}
-    Visiting Student: {visitor['student_name']}
-    Room No: {visitor['room_number']}
-    Purpose: {visitor['purpose']}
-    In Time: {visitor['in_time']}
-    Out Time: {out_time}
-    Time Spent: {visitor['time_spent']}
-    Status: {status}
-    Based on this, give 1 practical security tip for the hostel guard. Keep it simple, encouraging, and not more than 2 lines."""
-    try:
-        client = Groq(api_key=os.getenv("GROQ_API_KEY"))
-        response = client.chat.completions.create(model="llama-3.1-8b-instant", messages=[{"role": "user", "content": prompt}])
-        tip = response.choices[0].message.content
-    except Exception as e:
-        tip = "AI tip service is currently unavailable. Please check your GROQ_API_KEY."
-    return render_template("details.html", visitor=visitor, tip=tip)
 
+    visitor = conn.execute(
+        "SELECT * FROM visitors WHERE id = ?",
+        (id,)
+    ).fetchone()
+
+    conn.close()
+
+    if visitor is None:
+        flash("Visitor not found", "danger")
+        return redirect(url_for("records"))
+
+    out_time = (
+        visitor["out_time"]
+        if visitor["out_time"]
+        else "Not checked out yet"
+    )
+
+    status = visitor["status"]
+
+    prompt = f"""
+Visitor name: {visitor["visitor_name"]}
+Contact: {visitor["contact_no"]}
+Visiting Student: {visitor["student_name"]}
+Room Number: {visitor["room_number"]}
+Purpose: {visitor["purpose"]}
+In Time: {visitor["in_time"]}
+Out Time: {out_time}
+Time Spent: {visitor["time_spent"]}
+Status: {status}
+
+Give exactly ONE practical security tip for the hostel guard
+based on this visitor information.
+
+Keep it simple, useful and encouraging.
+Give only the security tip.
+Maximum 2 short sentences.
+"""
+
+    try:
+        api_key = os.getenv("GROQ_API_KEY")
+
+        if not api_key:
+            tip = "GROQ_API_KEY is not configured."
+
+        else:
+            client = Groq(api_key=api_key)
+
+            response = client.chat.completions.create(
+                model="openai/gpt-oss-20b",
+                messages=[
+                    {
+                        "role": "user",
+                        "content": prompt
+                    }
+                ],
+                temperature=0.3,
+                max_completion_tokens=300,
+                reasoning_effort="low",
+                include_reasoning=False
+            )
+
+            tip = response.choices[0].message.content.strip()
+
+            if not tip:
+                tip = (
+                    "Verify the visitor's identity and confirm "
+                    "the visiting student's details before allowing entry."
+                )
+
+            print("========== AI TIP ==========")
+            print(tip)
+            print("============================")
+
+    except Exception as e:
+        print("========== AI ERROR ==========")
+        print(repr(e))
+        print("==============================")
+
+        tip = f"AI Error: {str(e)}"
+
+    return render_template(
+        "details.html",
+        visitor=visitor,
+        tip=tip
+    )
 @app.route('/add_visitor', methods=['GET', 'POST'])
 def add_visitor():
     if session.get('role')!= 'admin':
